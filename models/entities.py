@@ -1,6 +1,6 @@
 from pydantic import BaseModel
-from .cards import Card, Suit, Rank
-from types import List, Union
+from models.cards import Card, Suit, Rank
+from typing import List, Union
 from abc import ABC, abstractmethod
 import random
 
