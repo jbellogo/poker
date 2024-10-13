@@ -1,31 +1,39 @@
-from pydantic import BaseModel, PositiveInt, IntEnum
-from enum import Enum
+from pydantic import BaseModel, PositiveInt
+from enum import Enum, IntEnum
 
 # class syntax
 class Suit(str, Enum):
-    SPADES = "spades"
-    HEARTS = "hearts"
-    CLUBS = "clubs"
-    DIAMONDS = "diamonds"
+    SPADES = "S"
+    HEARTS = "H"
+    CLUBS = "C"
+    DIAMONDS = "D"
+
+    @classmethod
+    def list(cls):
+        return list(map(lambda c: c.value, cls))
     
 class Rank(IntEnum):
-    TWO = 2, "2"
-    THREE = 3, "3"
-    FOUR = 4, "4"
-    FIVE = 5, "5"
-    SIX = 6, "6"
-    SEVEN = 7, "7"
-    EIGHT = 8, "8"
-    NINE = 9, "9"
-    TEN = 10, "10"
-    JACK = 11, "J"
-    QUEEN = 12, "Q"
-    KING = 13, "K"
-    ACE = 14, "A"   ## How to deal with this? 
+    TWO = 2
+    THREE = 3
+    FOUR = 4
+    FIVE = 5
+    SIX = 6
+    SEVEN = 7
+    EIGHT = 8
+    NINE = 9
+    TEN = 10
+    JACK = 11
+    QUEEN = 12
+    KING = 13
+    ACE = 14   ## How to deal with this? just do it in the straight checks
+
+    @classmethod
+    def list(cls):
+        return list(map(lambda c: c.value, cls))
     
 
 class Card(BaseModel):
     suit: Suit  
-    value: Value  
+    rank: Rank  
 
 
