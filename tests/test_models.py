@@ -1,8 +1,9 @@
 import pytest
+from unittest.mock import Mock
 import sys
   # append the path of the parent directory
 sys.path.append("..")
-from models import Deck, Entity, Player, Board, BoardStage
+from models import Deck, Entity, Player, Board, BoardStage, PlayerBetResponse, Pot
 from typing import Union
 
 
@@ -14,7 +15,7 @@ def test_deal_player():
     test that 2 cards are removed from the deck and those two cards are added to Player.
     '''
     deck = Deck()
-    player = Player(player_id=0)
+    player = Player(pid=0, funds=100)
     deck_len : int = deck.length()
     player_len : int = player.length()
     cards = deck.deal_cards(player)
@@ -56,6 +57,33 @@ def test_deal_board():
 
 
 
+## @TODO make PLAYERS a fixture. 
+    
+
+def test_betting_round1(monkeypatch):
+    '''
+    All players call
+    '''
+    PLAYERS  = [Player(pid = i, funds=100, current_hand_betting_status = "active") for i in range(1,4)]
+    pot = Pot(bb_amount = 20, players = PLAYERS)
+    P1resp = PlayerBetResponse(pid=1, player_funds=50, action = "call", amount_bet=20)
+    P2resp = PlayerBetResponse(pid=2, player_funds=50, action = "call", amount_bet=20)
+    P3resp = PlayerBetResponse(pid=3, player_funds=50, action = "call", amount_bet=20)
+
+    player_actions = [P1resp, P2resp, P3resp]
+    test_mock = Mock(side_effect=player_actions)
+    monkeypatch.setattr(Player, "make_bet", test_mock)
+
+    # player.make_bet() needs to be patched with the Playerresponse!!!1
+    pot.betting_round(BoardStage.PREFLOP)
+    assert(pot.get_hand_history()['PREFLOP'] == [P1resp, P2resp, P3resp])
+
+
+
+
+   
+
+   
 
 
 

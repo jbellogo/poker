@@ -1,6 +1,7 @@
 from models.cards import Card, Suit, Rank
 from typing import List
 from abc import ABC, abstractmethod
+from pydantic import BaseModel
 
 
 class Entity(BaseModel, ABC):
