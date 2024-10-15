@@ -132,8 +132,11 @@ class Pot():
                     # print(f"\nplayers_to_call = {players_to_call}")
                     # print(f"active_players = {active_players}")
 
-                    response = player.make_bet(self.betting_state) # needs to be awaited
+                    response : PlayerBetResponse = player.make_bet(self.betting_state) # needs to be awaited
+                    ## response has a pot_state.. it should not have one asigned until we are ready to save it. 
                     self.update_pot_state(response)
+                    response.pot_state = self.betting_state ## HERE 
+
                     player_action =  response.action
                     if  player_action == "raise":
                         players_to_call = active_players-1 # all active players
@@ -144,7 +147,8 @@ class Pot():
                     if player_action == "call":
                         players_to_call -=1
                     
-                    self.hand_history[board_stage.name].append(response)
+                    player_id = "player" + str(response.pid)
+                    self.hand_history[board_stage.name].append({player_id : response})
 
             
         print("betting round over!")

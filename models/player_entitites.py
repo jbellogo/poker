@@ -12,23 +12,24 @@ from typing_extensions import TypedDict
 #     BIG_BLIND = 2
 
 
-class PlayerBetResponse(BaseModel):
-    pid : int
-    player_funds : int
-    role : Literal["sb", "bb", "other"] = "other"
-    action : Literal["call", "raise", "fold"]
-    amount_bet : int 
-    # blind_tax : int = - BettingRoles.value * SMALL_BLIND
 
-    
-
-    
+        
 
 class PotState(TypedDict):
     call_amount : int
     check_allowed : bool
     minimum_raise : int
     pot_size : int
+
+
+class PlayerBetResponse(BaseModel):
+    pid : int
+    player_funds : int
+    role : Literal["sb", "bb", "other"] = "other"
+    action : Literal["call", "raise", "fold"]
+    amount_bet : int 
+    pot_state : PotState
+    # blind_tax : int = - BettingRoles.value * SMALL_BLIND
 
 
 
@@ -49,10 +50,9 @@ class Player(Entity):
     def set_status(self, new_status : Literal["active", "fold", "all-in", "inactive"]):
         self.current_hand_betting_status = new_status
     
-    async def make_bet(self, pot : PotState):
+    async def make_bet(self, pot_state : PotState):
         ### prepare the JSON information package to send to player to make a betting decision: 
         
-        pre_bet_state = pot.get_pre_bet_info()
         # @TODO Implement API to connect to frontend. 
         # pre_bet_state = {
         #     "call_amount" : pot.get_calling_amount(),
@@ -60,9 +60,7 @@ class Player(Entity):
         #     "minimum_raise" : 2*pot.get_calling_amount(),            
         #     "pot_size" : pot.get_pot_size() 
         # }
-        pre_bet_state["player_funds"] = self.funds
         ## 1**) send request to player's ip address, await resposne.
-        print(pre_bet_state)
         ## this should already be validated as the pre_bet_state is betting constraints served to player
         
         response = PlayerBetResponse({
@@ -71,6 +69,7 @@ class Player(Entity):
             "role": self.role,
             "action" : "Fold", 
             "amount" : 0,
+            "pot_state": pot_state
         })
 
         # update local player records with response. 

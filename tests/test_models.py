@@ -64,19 +64,46 @@ def test_betting_round1(monkeypatch):
     '''
     All players call
     '''
-    PLAYERS  = [Player(pid = i, funds=100, current_hand_betting_status = "active") for i in range(1,4)]
+    PLAYERS  = [Player(pid = i, funds=50, current_hand_betting_status = "active") for i in range(1,4)]
     pot = Pot(bb_amount = 20, players = PLAYERS)
-    P1resp = PlayerBetResponse(pid=1, player_funds=50, action = "call", amount_bet=20)
-    P2resp = PlayerBetResponse(pid=2, player_funds=50, action = "call", amount_bet=20)
-    P3resp = PlayerBetResponse(pid=3, player_funds=50, action = "call", amount_bet=20)
+    pot_state = pot.get_pot_state()
+    P1resp = PlayerBetResponse(pid=1, player_funds=50, action = "call", amount_bet=20, pot_state=pot_state)
+    P2resp = PlayerBetResponse(pid=2, player_funds=50, action = "call", amount_bet=20, pot_state=pot_state)
+    P3resp = PlayerBetResponse(pid=3, player_funds=50, action = "call", amount_bet=20, pot_state=pot_state)
 
     player_actions = [P1resp, P2resp, P3resp]
     test_mock = Mock(side_effect=player_actions)
     monkeypatch.setattr(Player, "make_bet", test_mock)
 
-    # player.make_bet() needs to be patched with the Playerresponse!!!1
     pot.betting_round(BoardStage.PREFLOP)
-    assert(pot.get_hand_history()['PREFLOP'] == [P1resp, P2resp, P3resp])
+    hand_history = pot.get_hand_history()['PREFLOP']
+    # assert(pot.get_hand_history()['PREFLOP'] == [P1resp, P2resp, P3resp])
+    print(hand_history)
+    ## assert the pot state. 
+    assert(len(hand_history)==3) # only three bets all call.
+    assert(hand_history[0]['player1'].pot_state == {
+      "call_amount" : 20,
+      "check_allowed" : True,
+      "minimum_raise" : 40,
+      "pot_size" : 20,
+    })
+    assert(hand_history[1]['player2'].pot_state == {
+      "call_amount" : 20,
+      "check_allowed" : True,
+      "minimum_raise" : 40,
+      "pot_size" : 40,
+    })
+    assert(hand_history[2]['player3'].pot_state == {
+      "call_amount" : 20,
+      "check_allowed" : True,
+      "minimum_raise" : 40,
+      "pot_size" : 60,
+    })
+
+
+
+
+
 
 
 
