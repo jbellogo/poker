@@ -22,7 +22,7 @@ class PlayerBetResponse(BaseModel):
     pid : int
     player_funds : int
     role : Literal["sb", "bb", "other"] = "other"
-    action : Literal["call", "raise", "fold"]
+    action : Literal["call", "raise", "fold", "check"]
     amount_bet : int 
     # pot_state : PotState
     # blind_tax : int = - BettingRoles.value * SMALL_BLIND
@@ -30,8 +30,8 @@ class PlayerBetResponse(BaseModel):
     #     self.pot_state = new_state
 
 class BettingRoundRecord(TypedDict):
-    response : PlayerBetResponse
-    pot_state : PotState
+    response : PlayerBetResponse # The move the player made given the pot_state
+    pot_state : PotState # the state before player made their move. 
 
 
 class Hand(str, Enum):

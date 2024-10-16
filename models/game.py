@@ -82,12 +82,24 @@ class Pot():
         # state.pot_size = self.pot_size
         return self.pot_state
     
-    def update_pot_state(self, last_action : PlayerBetResponse):
+    def update_pot_state(self, last_action : PlayerBetResponse, board_stage : BoardStage):
         self.pot_state['pot_size'] += last_action.amount_bet
-        self.pot_state['call_amount'] = last_action.amount_bet
-        self.pot_state['check_allowed'] =False if last_action.action == "raise" else True
-        self.pot_state['minimum_raise'] = 2*last_action.amount_bet
+        if board_stage == BoardStage.PREFLOP:
+            self.pot_state['check_allowed'] = False
+        else:
+            self.pot_state['check_allowed'] = False if last_action.action == "raise" else True
+        if self.pot_state['check_allowed'] == True:
+            self.pot_state['call_amount'] = 0
+            self.pot_state['minimum_raise'] = 1 ## @TODO HMMMMM
+        else:
+            self.pot_state['call_amount'] = last_action.amount_bet
+            self.pot_state['minimum_raise'] = 2*last_action.amount_bet
 
+
+    def get_tailored_pot_state(self, player : Player):
+        pot_copy = self.pot_state.copy()
+        pot_copy['call_amount'] -= player.amount_bet_this_hand() # updates
+        return pot_copy
 
     def betting_round(self, board_stage : BoardStage):
         '''pass the small blind index and amount here'''
@@ -100,16 +112,14 @@ class Pot():
                 if player.hand_status() == "active":
                     # print(f"\nplayers_to_call = {players_to_call}")
                     # print(f"active_players = {active_players}")
-                    response : PlayerBetResponse = player.make_bet(self.pot_state) # needs to be awaited
-                    ## response has a pot_state.. it should not have one asigned until we are ready to save it. 
-                    self.update_pot_state(response)
-                    # response.pot_state = self.pot_state ## HERE 
+                    pot_copy = self.get_tailored_pot_state(player)
+                    # the tailored pot state is sent to player with their respective call price. 
+                    response : PlayerBetResponse = player.make_bet(pot_copy) # needs to be awaited. 
                     player_id = "player" + str(response.pid)
-                    pot_copy = self.pot_state.copy()
                     betting_record = BettingRoundRecord(response=response, pot_state=pot_copy)
-                    record = {player_id : betting_record} 
-                    self.hand_history[board_stage.name].append(record)
-
+                    self.hand_history[board_stage.name].append({player_id : betting_record} )
+                    ### THEN WE UPDATE. this way we store the pot_state at the time before the player makes his move
+                    self.update_pot_state(response, board_stage)
                     player_action =  response.action
                     if  player_action == "raise":
                         players_to_call = active_players-1 # all active players
@@ -117,8 +127,9 @@ class Pot():
                         players_to_call-=1
                         active_players-=1
                         player.set_status("fold")
-                    elif player_action == "call":
+                    elif player_action == "call" or player_action == "check":
                         players_to_call -=1
+                    
                     
         print("betting round over!")
         self.persist_betting_round()
