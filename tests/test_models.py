@@ -6,6 +6,7 @@ sys.path.append("..")
 from models import Deck, Entity, Player, Board, BoardStage, PlayerBetResponse, Pot
 from typing import Union
 
+import pprint
 
 # it is convenient to test on abstract base class
 
@@ -78,22 +79,22 @@ def test_betting_round1(monkeypatch):
     pot.betting_round(BoardStage.PREFLOP)
     hand_history = pot.get_hand_history()['PREFLOP']
     # assert(pot.get_hand_history()['PREFLOP'] == [P1resp, P2resp, P3resp])
-    print(hand_history)
+    pprint.pp(hand_history)
     ## assert the pot state. 
     assert(len(hand_history)==3) # only three bets all call.
-    assert(hand_history[0]['player1'].pot_state == {
+    assert(hand_history[0]['player1']['pot_state'] == {
       "call_amount" : 20,
       "check_allowed" : True,
       "minimum_raise" : 40,
       "pot_size" : 20,
     })
-    assert(hand_history[1]['player2'].pot_state == {
+    assert(hand_history[1]['player2']['pot_state'] == {
       "call_amount" : 20,
       "check_allowed" : True,
       "minimum_raise" : 40,
       "pot_size" : 40,
     })
-    assert(hand_history[2]['player3'].pot_state == {
+    assert(hand_history[2]['player3']['pot_state'] == {
       "call_amount" : 20,
       "check_allowed" : True,
       "minimum_raise" : 40,

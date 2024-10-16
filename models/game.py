@@ -1,7 +1,8 @@
 from models.card_entities import Deck, Board, BoardStage
-from models.player_entitites import Player, PlayerBetResponse, PotState
+from models.player_entitites import Player, PlayerBetResponse
 from typing import List, Dict
 from uuid import UUID
+from models.definitions import BettingRoundRecord, PotState, PlayerBetResponse
 
 
 # both hand and pot state, and game logic can be separated into three classes?
@@ -29,31 +30,6 @@ NUM_PLAYERS = 5
 #             # update players
 #             # play hand
 #             hand.play()
-
-
-
-
-
-
-class BettingState:
-    def __init__(self, call_amount : int):
-        self.call_amount : int = call_amount
-        self.check_allowed : bool = False
-        self.minimum_raise : int = call_amount*2
-
-    def get_json(self):
-        return {
-            "call_amount" : self.call_amount,
-            "check_allowed": self.check_allowed,
-            "minimum_raise": self.minimum_raise,
-             # "small_blind_uuid" : self.sb_amount
-
-        }
-    def update(self, action : PlayerBetResponse):
-        self.call_amount = action.amount_bet  ##
-        self.check_allowed = False if action.action == "raise" else True, ## @TODO what about the first time around?
-        self.minimum_raise = 2*action.amount_bet  ##
-
     
 
 
@@ -67,6 +43,7 @@ class Pot():
         "pre-flop" : [
         {
             "<player_uui>" : {
+                    "record" :
             "role" : "sb",
             "price_to_call" : 20
             "action" : "call",
@@ -82,11 +59,13 @@ class Pot():
         ]
     }
     '''   
-    
+
     def __init__(self, bb_amount:int, players: List[Player]): #, sb_player_indx: int) -> None:
         self.players : List[Player] = players
-        self.betting_state = BettingState(call_amount = bb_amount)
-        self.pot_size : int = 0
+        self.pot_state : PotState = PotState(call_amount = bb_amount,
+                                                 check_allowed=False,
+                                                 minimum_raise=2*bb_amount,
+                                                 pot_size=0)
         self.hand_history = {"PREFLOP": [], "FLOP":[], "TURN":[], "RIVER":[]}
 
         # @TODO implement blinds 
@@ -99,31 +78,21 @@ class Pot():
         '''
         returns the necessary information about the pot state for any player to make a decision. 
         '''
-        state = self.betting_state.get_json()
-        state['pot_size'] = self.pot_size
-        return PotState(state)
+        # state = self.pot_state
+        # state.pot_size = self.pot_size
+        return self.pot_state
     
     def update_pot_state(self, last_action : PlayerBetResponse):
-        self.pot_size += last_action.amount_bet
-        self.betting_state.update(last_action)
-
-
-    # async def betting_round(self):
-    #     # go around once or as many times as there are raises!!!. 
-    #     for player in self.players:
-    #         response = await player.make_bet(self.pot) ## all changes are reflected on the pot. 
-    #         self.pot_size += response.amount
-    #         self.update_pre_bet_state(response)
-            # if response_action == "raise":
-            #     # everyone needs to call or raise.
+        self.pot_state['pot_size'] += last_action.amount_bet
+        self.pot_state['call_amount'] = last_action.amount_bet
+        self.pot_state['check_allowed'] =False if last_action.action == "raise" else True
+        self.pot_state['minimum_raise'] = 2*last_action.amount_bet
 
 
     def betting_round(self, board_stage : BoardStage):
         '''pass the small blind index and amount here'''
-        ## Assume players has only active players ... how do we keep track if they fold, or go al in? a special, iterable data struture
         active_players = len(self.players)
         players_to_call = active_players
-
         while players_to_call != 0:
             for player in self.players:
                 if players_to_call == 0:
@@ -131,26 +100,26 @@ class Pot():
                 if player.hand_status() == "active":
                     # print(f"\nplayers_to_call = {players_to_call}")
                     # print(f"active_players = {active_players}")
-
-                    response : PlayerBetResponse = player.make_bet(self.betting_state) # needs to be awaited
+                    response : PlayerBetResponse = player.make_bet(self.pot_state) # needs to be awaited
                     ## response has a pot_state.. it should not have one asigned until we are ready to save it. 
                     self.update_pot_state(response)
-                    response.pot_state = self.betting_state ## HERE 
+                    # response.pot_state = self.pot_state ## HERE 
+                    player_id = "player" + str(response.pid)
+                    pot_copy = self.pot_state.copy()
+                    betting_record = BettingRoundRecord(response=response, pot_state=pot_copy)
+                    record = {player_id : betting_record} 
+                    self.hand_history[board_stage.name].append(record)
 
                     player_action =  response.action
                     if  player_action == "raise":
                         players_to_call = active_players-1 # all active players
-                    if player_action == "fold":
+                    elif player_action == "fold":
                         players_to_call-=1
                         active_players-=1
                         player.set_status("fold")
-                    if player_action == "call":
+                    elif player_action == "call":
                         players_to_call -=1
                     
-                    player_id = "player" + str(response.pid)
-                    self.hand_history[board_stage.name].append({player_id : response})
-
-            
         print("betting round over!")
         self.persist_betting_round()
 
@@ -178,10 +147,6 @@ class Pot():
     #     }, 
     #     ]
     # }'''
-
-
-
-
 
 
             
@@ -241,14 +206,4 @@ class Pot():
 
 #     '''
 
-#     ROYAL_FLUSH = "royal_flush"
-#     STRAIGHT_FLUSH = "straight_flush"
-#     FOUR_OF_A_KIND = "four_of_a_kind"
-#     FULLHOUSE = "full_house"
-#     FLUSH = "flush"
-#     STRAIGHT = "straight"
-#     THREE_OF_A_KIND = "three_of_a_kind"
-#     TWO_PAIR = "two_pair"
-#     PAIR = "pair"
-#     HIGH_CARD = "high_card"
 

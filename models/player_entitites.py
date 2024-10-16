@@ -2,35 +2,7 @@ from models.entity import Entity
 from typing import Literal
 from uuid import UUID
 from pydantic import BaseModel
-from typing_extensions import TypedDict
-
-
-############
-# class BettingRoles(intEnum):
-#     OTHER  = 0
-#     SMALL_BLIND = 1
-#     BIG_BLIND = 2
-
-
-
-        
-
-class PotState(TypedDict):
-    call_amount : int
-    check_allowed : bool
-    minimum_raise : int
-    pot_size : int
-
-
-class PlayerBetResponse(BaseModel):
-    pid : int
-    player_funds : int
-    role : Literal["sb", "bb", "other"] = "other"
-    action : Literal["call", "raise", "fold"]
-    amount_bet : int 
-    pot_state : PotState
-    # blind_tax : int = - BettingRoles.value * SMALL_BLIND
-
+from models.definitions import PotState, PlayerBetResponse
 
 
 class Player(Entity):
