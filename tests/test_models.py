@@ -59,14 +59,19 @@ def test_deal_board():
 
 
 ## @TODO make PLAYERS a fixture. 
-    
+@pytest.fixture
+def players_list():
+    '''
+    this is a ficture because a list of players is used in a lot of tests
+    '''
+    return [Player(pid = i, funds=50, current_hand_betting_status = "active") for i in range(1,4)]
 
-def test_betting_round1(monkeypatch):
+def test_betting_round1(monkeypatch, players_list):
     '''
     All players call
     '''
-    PLAYERS  = [Player(pid = i, funds=50, current_hand_betting_status = "active") for i in range(1,4)]
-    pot = Pot(bb_amount = 20, players = PLAYERS)
+    # PLAYERS  = [Player(pid = i, funds=50, current_hand_betting_status = "active") for i in range(1,4)]
+    pot = Pot(bb_amount = 20, players = players_list)
     pot_state = pot.get_pot_state()
     P1resp = PlayerBetResponse(pid=1, player_funds=50, action = "call", amount_bet=20, pot_state=pot_state)
     P2resp = PlayerBetResponse(pid=2, player_funds=50, action = "call", amount_bet=20, pot_state=pot_state)
@@ -78,8 +83,11 @@ def test_betting_round1(monkeypatch):
 
     pot.betting_round(BoardStage.PREFLOP)
     hand_history = pot.get_hand_history()['PREFLOP']
-    # assert(pot.get_hand_history()['PREFLOP'] == [P1resp, P2resp, P3resp])
-    pprint.pp(hand_history)
+    assert(hand_history[0]['player1']['response'] == P1resp)
+    assert(hand_history[1]['player2']['response'] == P2resp)
+    assert(hand_history[2]['player3']['response'] == P3resp)
+
+    # pprint.pp(hand_history)
     ## assert the pot state. 
     assert(len(hand_history)==3) # only three bets all call.
     assert(hand_history[0]['player1']['pot_state'] == {
