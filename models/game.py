@@ -83,17 +83,21 @@ class Pot():
         return self.pot_state
     
     def update_pot_state(self, last_action : PlayerBetResponse, board_stage : BoardStage):
-        self.pot_state['pot_size'] += last_action.amount_bet
+        action : str = last_action['action']
+        amount : int = last_action['amount_bet']
+        self.pot_state['pot_size'] += amount
+        print(board_stage)
+        print(last_action)
         if board_stage == BoardStage.PREFLOP:
             self.pot_state['check_allowed'] = False
         else:
-            self.pot_state['check_allowed'] = False if last_action.action == "raise" else True
+            self.pot_state['check_allowed'] = False if action == "raise" else True
         if self.pot_state['check_allowed'] == True:
             self.pot_state['call_amount'] = 0
             self.pot_state['minimum_raise'] = 1 ## @TODO HMMMMM
         else:
-            self.pot_state['call_amount'] = last_action.amount_bet
-            self.pot_state['minimum_raise'] = 2*last_action.amount_bet
+            self.pot_state['call_amount'] = amount
+            self.pot_state['minimum_raise'] = 2*amount
 
 
     def get_tailored_pot_state(self, player : Player):
@@ -115,12 +119,12 @@ class Pot():
                     pot_copy = self.get_tailored_pot_state(player)
                     # the tailored pot state is sent to player with their respective call price. 
                     response : PlayerBetResponse = player.make_bet(pot_copy) # needs to be awaited. 
-                    player_id = "player" + str(response.pid)
+                    player_id = "player" + str(response['pid'])
                     betting_record = BettingRoundRecord(response=response, pot_state=pot_copy)
                     self.hand_history[board_stage.name].append({player_id : betting_record} )
                     ### THEN WE UPDATE. this way we store the pot_state at the time before the player makes his move
                     self.update_pot_state(response, board_stage)
-                    player_action =  response.action
+                    player_action =  response['action']
                     if  player_action == "raise":
                         players_to_call = active_players-1 # all active players
                     elif player_action == "fold":

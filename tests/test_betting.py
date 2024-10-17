@@ -97,13 +97,13 @@ def test_betting_round3(monkeypatch, pot_fix):
     '''
     '''
     round = BoardStage.FLOP
-    pot_state = pot_fix.get_pot_state()
+    # pot_state = pot_fix.get_pot_state()
     
-    P1resp1 = PlayerBetResponse(pid=1, player_funds=50, action = "check", amount_bet=0, pot_state=pot_state)
-    P2resp1 = PlayerBetResponse(pid=2, player_funds=50, action = "raise", amount_bet=100, pot_state=pot_state)
-    P3resp = PlayerBetResponse(pid=3, player_funds=50, action = "raise", amount_bet=200, pot_state=pot_state)
-    P1resp2 = PlayerBetResponse(pid=1, player_funds=50, action = "call", amount_bet=200, pot_state=pot_state)
-    P2resp2 = PlayerBetResponse(pid=1, player_funds=50, action = "call", amount_bet=100, pot_state=pot_state)
+    P1resp1 = PlayerBetResponse(pid=1, player_funds=50, action = "check", amount_bet=0)
+    P2resp1 = PlayerBetResponse(pid=2, player_funds=50, action = "raise", amount_bet=100)
+    P3resp = PlayerBetResponse(pid=3, player_funds=50, action = "raise", amount_bet=200)
+    P1resp2 = PlayerBetResponse(pid=1, player_funds=50, action = "call", amount_bet=200)
+    P2resp2 = PlayerBetResponse(pid=1, player_funds=50, action = "call", amount_bet=100)
 
     player_actions = [P1resp1, P2resp1, P3resp, P1resp2, P2resp2]
     test_mock = Mock(side_effect=player_actions)

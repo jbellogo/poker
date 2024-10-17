@@ -18,7 +18,7 @@ class PotState(TypedDict):
     pot_size : int
 
 
-class PlayerBetResponse(BaseModel):
+class PlayerBetResponse(TypedDict):
     pid : int
     player_funds : int
     role : Literal["sb", "bb", "other"] = "other"
