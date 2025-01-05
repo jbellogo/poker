@@ -1,5 +1,5 @@
-from models.card_entities import Deck, Board, BoardStage
-from models.player_entitites import Player, PlayerBetResponse
+from models.entities import Deck, Board, BoardStage
+from models.player import Player, PlayerBetResponse
 from typing import List, Dict
 from uuid import UUID
 from models.definitions import BettingRoundRecord, PotState, PlayerBetResponse
