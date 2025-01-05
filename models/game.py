@@ -1,8 +1,7 @@
-from models.entities import Deck, Board, BoardStage
-from models.player import Player, PlayerBetResponse
+from models.entities import Deck, Board, BoardStage, Player, PlayerBetResponse
 from typing import List, Dict
 from uuid import UUID
-from models.definitions import BettingRoundRecord, PotState, PlayerBetResponse
+from models.definitions import PotState, PlayerBetResponse, BettingRoundRecord
 
 
 # both hand and pot state, and game logic can be separated into three classes?

@@ -65,6 +65,14 @@ class PlayerBetResponse(TypedDict):
     # def update_pot_state(self, new_state : PotState):
     #     self.pot_state = new_state
 
+class BettingRoundRecord(TypedDict):
+    '''
+    ## To save in database for subsequent analysis. 
+    Not tested yet
+    '''
+    response : PlayerBetResponse # The move the player made given the pot_state
+    pot_state : PotState # the state before player made their move. 
+
 
 ################################################################################################
 ################################################################################################
@@ -72,13 +80,6 @@ class PlayerBetResponse(TypedDict):
 ################################################################################################
 ################################################################################################
     
-# class BettingRoundRecord(TypedDict):
-#     '''
-#     ## To save in database for subsequent analysis. 
-#     Not tested yet
-#     '''
-#     response : PlayerBetResponse # The move the player made given the pot_state
-#     pot_state : PotState # the state before player made their move. 
 
 
 # class BettingRoles(intEnum):

@@ -1,10 +1,9 @@
 import pytest
 import sys
   # append the path of the parent directory
-sys.path.append("..")
+# sys.path.append("..")
 from models import Deck, Entity, Player, Board, BoardStage, PlayerBetResponse, Pot
 from typing import Union
-
 import pprint
 
 

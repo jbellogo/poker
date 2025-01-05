@@ -7,7 +7,6 @@ from models.definitions import Card, Suit, Rank, PotState, PlayerBetResponse
 from typing import List, Union, Literal
 import random
 from enum import IntEnum
-from models.entities import Entity
 from uuid import UUID
 from abc import ABC, abstractmethod
 
