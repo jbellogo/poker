@@ -1,21 +1,20 @@
 import pytest
 from models import Deck, Player, Board, BoardStage, PlayerBetResponse, Pot
 from unittest.mock import Mock
-# from typing import List, Tuple
-
-
+from typing import List# Tuple
 import pprint
 
 
-def get_player_actions(actions : list[tuple[str,int]]):
+def get_player_actions(actions : list[tuple[str,int]]) -> List[PlayerBetResponse]:
     player_actions = []
     '''
-    Assume three players, Actions go in modular order ie P1, P2, P3, P1, P2, P3,...
+    Assume three players, Actions go in modular sequence ie P1, P2, P3, P1, P2, P3,...
     ex actions = [('call', 20), ('raise',40), ('call', 40), ('call', 20)]
+    Returns List[PlayerBetResponses] from simplified list of tuples
     '''
-    for i in range(0,4):
+    for i, a in enumerate(actions):
         pid = (i%3)+1
-        action, amount = actions[i]
+        action, amount = a
         player_actions.append(PlayerBetResponse(pid=pid, player_funds=50, action = action, amount_bet=amount))
 
     return player_actions
@@ -23,24 +22,35 @@ def get_player_actions(actions : list[tuple[str,int]]):
 
 def test_betting_round1(monkeypatch, pot_fix):
     '''
-    All players call
+    Situation: All players call
     '''
-    pot_state = pot_fix.get_pot_state()
-    P1resp = PlayerBetResponse(pid=1, player_funds=50, action = "call", amount_bet=20, pot_state=pot_state)
-    P2resp = PlayerBetResponse(pid=2, player_funds=50, action = "call", amount_bet=20, pot_state=pot_state)
-    P3resp = PlayerBetResponse(pid=3, player_funds=50, action = "call", amount_bet=20, pot_state=pot_state)
-    player_actions = [P1resp, P2resp, P3resp]
+    round = BoardStage.PREFLOP
+    actions = [('call', 20), ('call',20), ('call', 20)] # @TODO the calling amount should not need to be input by players
+    player_actions = get_player_actions(actions)
+
     test_mock = Mock(side_effect=player_actions)
     monkeypatch.setattr(Player, "make_bet", test_mock)
 
     pot_fix.betting_round(BoardStage.PREFLOP)
     hand_history = pot_fix.get_hand_history()['PREFLOP']
+    pprint.pprint(hand_history)
 
-    assert(hand_history[0]['player1']['response'] == P1resp)
-    assert(hand_history[1]['player2']['response'] == P2resp)
-    assert(hand_history[2]['player3']['response'] == P3resp)
+    assert(hand_history[0]['player1']['response'] == {
+        'action': 'call',
+        'amount_bet': 20,
+        'pid': 1,
+        'player_funds': 50})
+    assert(hand_history[1]['player2']['response'] == {
+        'action': 'call',
+        'amount_bet': 20,
+        'pid': 2,
+        'player_funds': 50})
+    assert(hand_history[2]['player3']['response'] == {
+        'action': 'call',
+        'amount_bet': 20,
+        'pid': 3,
+        'player_funds': 50})
 
-    # pprint.pp(hand_history)
     assert(len(hand_history)==3) # only three bets all call.
     assert(hand_history[0]['player1']['pot_state'] == {
       "call_amount" : 20,
@@ -66,16 +76,15 @@ def test_betting_round1(monkeypatch, pot_fix):
 # betting_actions = [('call', 20), ('raise',40), ('call', 40), ('call', 20)]
 # @pytest.mark.parametrize('player_actions', [betting_actions], indirect=True)
 def test_betting_round2(monkeypatch, pot_fix):
-    '''
-    '''
     round = BoardStage.PREFLOP
+    # Situation:
     actions = [('call', 20), ('raise',40), ('call', 40), ('call', 20)]
     player_actions = get_player_actions(actions) # NEW
 
     test_mock = Mock(side_effect=player_actions)
     monkeypatch.setattr(Player, "make_bet", test_mock)
     pot_fix.betting_round(round)
-    hand_history = pot_fix.get_hand_history()['PREFLOP']
+    hand_history = pot_fix.get_hand_history()['PREFLOP'] # This is the thing
 
     pprint.pp(hand_history)
     assert(len(hand_history)==4) # 4 moves total
@@ -162,11 +171,6 @@ def test_betting_round2(monkeypatch, pot_fix):
 #       "minimum_raise" : 400,
 #       "pot_size" : 500,
 #     })
-
-
-
-
-
 
 
 
