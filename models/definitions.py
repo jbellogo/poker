@@ -46,7 +46,7 @@ class Card(BaseModel):
 
 ######## BETTING
 class BoardStage(IntEnum):
-    ZERO = 0
+    ZERO = 0     ### Can we get rid of this one?
     PREFLOP = 1
     FLOP = 2
     TURN = 3

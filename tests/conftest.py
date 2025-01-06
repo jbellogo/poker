@@ -23,7 +23,7 @@ def board_fix():
 
 @pytest.fixture
 def player_list_fix():
-    return [Player(pid = i, funds=INITIAL_PLAYER_FUNDS, current_hand_betting_status = "active") for i in range(1,4)]
+    return [Player(pid = i, funds=INITIAL_PLAYER_FUNDS, betting_status = "active") for i in range(1,4)]
 
 @pytest.fixture
 def pot_fix_preflop(player_list_fix):

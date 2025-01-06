@@ -39,17 +39,17 @@ class Player(Entity):
     funds : int
     role : Literal["sb", "bb", "other"] = "other"  # they must change every round
     number_cards_dealt : int = 2
-    current_hand_betting_status : Literal["active", "fold", "all-in", "inactive"] = "inactive"
+    betting_status : Literal["active", "fold", "all-in", "inactive"] = "inactive"
     current_hand_amount_bet : int = 0
 
     def cards_dealt(self) -> int:
         return self.number_cards_dealt
     
     def hand_status(self):
-        return self.current_hand_betting_status
+        return self.betting_status
 
     def set_status(self, new_status : Literal["active", "fold", "all-in", "inactive"]):
-        self.current_hand_betting_status = new_status
+        self.betting_status = new_status
     
     def amount_bet_this_hand(self):
         return self.current_hand_amount_bet
