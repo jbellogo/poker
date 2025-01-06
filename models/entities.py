@@ -3,7 +3,7 @@ Card entities are Card object owners: Deck, Board, and Players.
 '''
 
 from pydantic import BaseModel
-from models.definitions import Card, Suit, Rank, PotState, PlayerBetResponse
+from models.definitions import Card, Suit, Rank, PotState, PlayerBetResponse, BoardStage
 from typing import List, Union, Literal
 import random
 from enum import IntEnum
@@ -89,12 +89,6 @@ class Player(Entity):
 
 
 
-class BoardStage(IntEnum):
-    ZERO = 0
-    PREFLOP = 1
-    FLOP = 2
-    TURN = 3
-    RIVER = 4
 
 
 class Board(Entity):
@@ -102,9 +96,6 @@ class Board(Entity):
     shows the community cards. 
     '''
     stage : BoardStage = 0
-
-    # def __init__(self):
-    #     super().__init__()
 
     def __str__(self) -> str:
         return super().__str__()

@@ -4,9 +4,10 @@ Fixtures are passed as arguments to test functions
 '''
 
 import pytest
-from models import Deck, Player, Board, BoardStage, PlayerBetResponse, Pot
+from models import Deck, Player, Board, BoardStage, PlayerBetResponse, Pot, PotState
 
 BIG_BLIND = 20
+INITIAL_PLAYER_FUNDS = 50
 
 @pytest.fixture
 def player_fix():
@@ -22,15 +23,28 @@ def board_fix():
 
 @pytest.fixture
 def player_list_fix():
-    return [Player(pid = i, funds=50, current_hand_betting_status = "active") for i in range(1,4)]
+    return [Player(pid = i, funds=INITIAL_PLAYER_FUNDS, current_hand_betting_status = "active") for i in range(1,4)]
 
 @pytest.fixture
-def pot_fix(player_list_fix):
-    '''
-    this is a ficture because a list of players is used in a lot of tests
-    '''
+def pot_fix_preflop(player_list_fix):
+    '''For betting tests'''
     pot = Pot(bb_amount = BIG_BLIND, players = player_list_fix)
     return pot
+
+@pytest.fixture
+def pot_fix_flop(player_list_fix):
+    '''For betting tests'''
+    # I just want to set potstate
+    new_pot_state = PotState({
+        'call_amount': 0,
+        'check_allowed' : True,
+        'minimum_raise' : 100,
+        'pot_size' : 1000
+    })
+    pot = Pot(bb_amount = BIG_BLIND, players = player_list_fix)
+    pot.overwrite_pot_state(new_pot_state)
+    return pot
+
 
 
 # @pytest.fixture

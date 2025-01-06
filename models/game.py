@@ -2,7 +2,7 @@ from models.entities import Deck, Board, BoardStage, Player, PlayerBetResponse
 from typing import List, Dict
 from uuid import UUID
 from models.definitions import PotState, PlayerBetResponse, BettingRoundRecord
-
+import pprint
 
 # both hand and pot state, and game logic can be separated into three classes?
 # state class should have both hand and pot. 
@@ -32,80 +32,88 @@ NUM_PLAYERS = 5
     
 
 
-
 class Pot():
     '''
     Saves betting history in a single hand.
     awaits responses in methods betting_round()
-
+    Gets Updated after every single player action. how would MVC design work?
     {
         "pre-flop" : [
-        {
-            "<player_uui>" : {
-                    "record" :
-            "role" : "sb",
-            "price_to_call" : 20
-            "action" : "call",
-            "amount" : 20,
-        }, 
-        {
-            "<player_uui>" : {
-            "role" : "bb",
-            "price_to_call" : 20
-            "action" : "raise",
-            "amount" : 20,
-        }, 
+            {
+                "<player_id>" : {
+                        "record" :
+                "role" : "sb",
+                "price_to_call" : 20
+                "action" : "call",
+                "amount" : 20,
+            }
         ]
     }
     '''   
 
-    def __init__(self, bb_amount:int, players: List[Player]): #, sb_player_indx: int) -> None:
+    def __init__(self, bb_amount:int, players: List[Player], sb_index: int = 0): 
         self.players : List[Player] = players
         self.pot_state : PotState = PotState(call_amount = bb_amount,
-                                                 check_allowed=False,
-                                                 minimum_raise=2*bb_amount,
-                                                 pot_size=0)
-        self.hand_history = {"PREFLOP": [], "FLOP":[], "TURN":[], "RIVER":[]}
+                                             check_allowed=False,
+                                            minimum_raise=2*bb_amount,
+                                            pot_size=0) ## Initial default. 
+        self.hand_history = {"PREFLOP": [], "FLOP":[], "TURN":[], "RIVER":[]} 
 
         # @TODO implement blinds 
-        # self.sb_amount : int = sb_amount # player index? id # they ust be taken from them. 
-        # self.bb_amount : int = sb_amount*2
-        # self.sb_player_id: UUID = sb_player_id
+        self.sb_amount : int = bb_amount/2 # player index? id # they ust be taken from them. 
+        self.bb_amount : int = bb_amount
+        self.sb_player_index: int = sb_index
 
 
     def get_pot_state(self) -> PotState:
         '''
         returns the necessary information about the pot state for any player to make a decision. 
         '''
-        # state = self.pot_state
-        # state.pot_size = self.pot_size
         return self.pot_state
     
     def update_pot_state(self, last_action : PlayerBetResponse, board_stage : BoardStage):
+        print("LAST PLAYER ACTION: ")
+        print(last_action)
         action : str = last_action['action']
         amount : int = last_action['amount_bet']
         self.pot_state['pot_size'] += amount
-        print(board_stage)
-        print(last_action)
+        # print(board_stage)
+        # print(last_action)
+        # Basically everytime there is a raise, we should update check_allowed and call_amount
+        # Initially:
         if board_stage == BoardStage.PREFLOP:
             self.pot_state['check_allowed'] = False
+
         else:
-            self.pot_state['check_allowed'] = False if action == "raise" else True
-        if self.pot_state['check_allowed'] == True:
-            self.pot_state['call_amount'] = 0
-            self.pot_state['minimum_raise'] = 1 ## @TODO HMMMMM
-        else:
+            pass # check = True <-> turn = 1, Smallblind. After that look at past action
+
+        # When is checking allowed? if board_stage is advanced and everyone has checked.
+        
+        # Fine tunning:
+        if action == 'raise':
+            self.pot_state['check_allowed'] = False
             self.pot_state['call_amount'] = amount
             self.pot_state['minimum_raise'] = 2*amount
 
+
+    def overwrite_pot_state(self, new_pot_state : PotState):
+        self.pot_state = new_pot_state
 
     def get_tailored_pot_state(self, player : Player):
         pot_copy = self.pot_state.copy()
         pot_copy['call_amount'] -= player.amount_bet_this_hand() # updates
         return pot_copy
 
-    def betting_round(self, board_stage : BoardStage):
-        '''pass the small blind index and amount here'''
+    def betting_round(self, board_stage : BoardStage, sb_index : int):
+        '''
+        Single betting round ie preflop or flop or etc. 
+        Awaits active player actions
+        @TODO NOW: SMALL AND BIG BLIND AND TURNS!!!!
+        @TODO pass the small blind index and amount here'''
+        active_players = len(self.players)
+        players = [self.players[i%active_players] for i in range(sb_index, 2*active_players-sb_index)]
+        pprint.pprint(players)
+
         active_players = len(self.players)
         players_to_call = active_players
         while players_to_call != 0:
@@ -162,6 +170,8 @@ class Pot():
     #     ]
     # }'''
 
+class Game:
+    pass
 
             
 # class Hand(BaseModel):

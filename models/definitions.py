@@ -1,8 +1,7 @@
 from typing_extensions import TypedDict
-from typing import Literal
+from typing import Literal, List
 from enum import Enum, IntEnum
 from pydantic import BaseModel
-
 
 
 # Card definitions
@@ -46,6 +45,12 @@ class Card(BaseModel):
         return f"{self.rank}{self.suit}"
 
 ######## BETTING
+class BoardStage(IntEnum):
+    ZERO = 0
+    PREFLOP = 1
+    FLOP = 2
+    TURN = 3
+    RIVER = 4
         
 class PotState(TypedDict):
     call_amount : int
@@ -53,6 +58,17 @@ class PotState(TypedDict):
     minimum_raise : int
     pot_size : int
 
+class BoardState(TypedDict):
+    cards : List[Card]
+    stage : BoardStage
+
+class GameState(TypedDict):
+    '''
+    Contains necessary pot and board? information avaliable to players before acting.
+    Board Stage is public information 
+    '''
+    pot: PotState
+    board: BoardState
 
 class PlayerBetResponse(TypedDict):
     pid : int
@@ -65,14 +81,17 @@ class PlayerBetResponse(TypedDict):
     # def update_pot_state(self, new_state : PotState):
     #     self.pot_state = new_state
 
+
+
 class BettingRoundRecord(TypedDict):
     '''
     ## To save in database for subsequent analysis. 
     Not tested yet
     '''
+    # game : GameState     # the state before player made their move. 
+    # stage : BoardStage
     response : PlayerBetResponse # The move the player made given the pot_state
-    pot_state : PotState # the state before player made their move. 
-
+    pot_state : PotState 
 
 ################################################################################################
 ################################################################################################
