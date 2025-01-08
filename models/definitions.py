@@ -1,5 +1,5 @@
 from typing_extensions import TypedDict
-from typing import Literal, List
+from typing import Literal, List, Tuple
 from enum import Enum, IntEnum
 from pydantic import BaseModel
 
@@ -64,7 +64,7 @@ class BoardState(TypedDict):
 
 class GameState(TypedDict):
     '''
-    Contains necessary pot and board? information avaliable to players before acting.
+    Contains necessary pot and board information avaliable to players before acting.
     Board Stage is public information 
     '''
     pot: PotState
@@ -73,9 +73,10 @@ class GameState(TypedDict):
 class PlayerBetResponse(TypedDict):
     pid : int
     player_funds : int
+    amount_bet : int 
     role : Literal["sb", "bb", "other"] = "other"
     action : Literal["call", "raise", "fold", "check"]
-    amount_bet : int 
+    hand : Tuple[Card, Card]
 
 
 class BettingRoundRecord(TypedDict):
@@ -83,6 +84,7 @@ class BettingRoundRecord(TypedDict):
     ## To save in database for subsequent analysis. 
     Not tested yet
     '''
+    pid : int
     game : GameState     # the state before player made their move. 
     response : PlayerBetResponse # The move the player made given the pot_state
 
