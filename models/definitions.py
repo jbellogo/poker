@@ -46,7 +46,7 @@ class Card(BaseModel):
 
 ######## BETTING
 class BoardStage(IntEnum):
-    ZERO = 0     ### Can we get rid of this one?
+    # ZERO = 0     ### Can we get rid of this one?
     PREFLOP = 1
     FLOP = 2
     TURN = 3
@@ -76,11 +76,6 @@ class PlayerBetResponse(TypedDict):
     role : Literal["sb", "bb", "other"] = "other"
     action : Literal["call", "raise", "fold", "check"]
     amount_bet : int 
-    # pot_state : PotState
-    # blind_tax : int = - BettingRoles.value * SMALL_BLIND
-    # def update_pot_state(self, new_state : PotState):
-    #     self.pot_state = new_state
-
 
 
 class BettingRoundRecord(TypedDict):
@@ -88,10 +83,8 @@ class BettingRoundRecord(TypedDict):
     ## To save in database for subsequent analysis. 
     Not tested yet
     '''
-    # game : GameState     # the state before player made their move. 
-    # stage : BoardStage
+    game : GameState     # the state before player made their move. 
     response : PlayerBetResponse # The move the player made given the pot_state
-    pot_state : PotState 
 
 ################################################################################################
 ################################################################################################

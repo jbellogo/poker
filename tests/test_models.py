@@ -1,12 +1,8 @@
 import pytest
 import sys
-  # append the path of the parent directory
-# sys.path.append("..")
 from models import Deck, Entity, Player, Board, BoardStage, PlayerBetResponse, Pot
 from typing import Union
 import pprint
-
-
 
 
 def test_deal_player(deck_fix, player_fix):

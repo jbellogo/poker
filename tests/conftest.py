@@ -4,7 +4,7 @@ Fixtures are passed as arguments to test functions
 '''
 
 import pytest
-from models import Deck, Player, Board, BoardStage, PlayerBetResponse, Pot, PotState
+from models import Deck, Player, Board, BoardStage, PlayerBetResponse, Pot, PotState, Game
 
 BIG_BLIND = 20
 INITIAL_PLAYER_FUNDS = 50
@@ -44,6 +44,12 @@ def pot_fix_flop(player_list_fix):
     pot = Pot(bb_amount = BIG_BLIND, players = player_list_fix)
     pot.overwrite_pot_state(new_pot_state)
     return pot
+
+
+@pytest.fixture
+def game_fix():
+    return Game()
+
 
 
 

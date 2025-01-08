@@ -5,6 +5,10 @@ from typing import List# Tuple
 import pprint
 
 
+###### Test every function in every module!!!
+
+ 
+
 
 
 def get_player_actions(actions : list[tuple[str,int]]) -> List[PlayerBetResponse]:

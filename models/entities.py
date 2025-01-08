@@ -45,8 +45,11 @@ class Player(Entity):
     def cards_dealt(self) -> int:
         return self.number_cards_dealt
     
-    def hand_status(self):
+    def get_betting_status(self):
         return self.betting_status
+    
+    def get_id(self) -> int:
+        return self.pid
 
     def set_status(self, new_status : Literal["active", "fold", "all-in", "inactive"]):
         self.betting_status = new_status
@@ -95,23 +98,28 @@ class Board(Entity):
     '''
     shows the community cards. 
     '''
-    stage : BoardStage = 0
+    stage : BoardStage = BoardStage.PREFLOP
 
     def __str__(self) -> str:
         return super().__str__()
     
-    def current_stage(self) -> BoardStage:
-        return self.stage
+    # def current_stage(self) -> BoardStage:
+    #     return self.stage
 
-    def next_stage(self) -> bool:
-        indicator = self.stage < BoardStage.RIVER
-        if indicator:
-            self.stage +=1
+    # def next_stage(self) -> bool:
+    #     indicator = self.stage < BoardStage.RIVER
+    #     if indicator:
+    #         self.stage +=1
         
-        return indicator
+    #     return indicator
+    def set_round(self, stage : BoardStage):
+        self.stage = stage
 
     def best_hand(self, player_hand : List[Card]):
         pass
+
+    def show(self):
+        print(self.stage) ## for now. 
 
     def cards_dealt(self) -> int:
         '''Number of cards dealt. 3 on FLOP, 1 On turn, 1 on river.'''
