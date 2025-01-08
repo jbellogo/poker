@@ -4,11 +4,13 @@ Card entities are Card object owners: Deck, Board, and Players.
 
 from pydantic import BaseModel
 from models.definitions import Card, Suit, Rank, PotState, PlayerBetResponse, BoardStage
-from typing import List, Union, Literal
+from typing import List, Union, Literal, Tuple
 import random
 from enum import IntEnum
 from uuid import UUID
 from abc import ABC, abstractmethod
+import asyncio
+from aiohttp import ClientSession
 
 ###  
 ### Entities are Card owners.
@@ -30,7 +32,7 @@ class Entity(BaseModel, ABC):
         return self.cards
     
     @abstractmethod
-    def cards_dealt(self) -> int:
+    def _cards_dealt(self) -> int:
         pass
 
 
@@ -41,8 +43,10 @@ class Player(Entity):
     number_cards_dealt : int = 2
     betting_status : Literal["active", "fold", "all-in", "inactive"] = "inactive"
     current_hand_amount_bet : int = 0
+    hand : Tuple[Card, Card] = None
 
-    def cards_dealt(self) -> int:
+
+    def _cards_dealt(self) -> int:
         return self.number_cards_dealt
     
     def get_betting_status(self):
@@ -61,7 +65,7 @@ class Player(Entity):
     #     ''' this is only used for testing'''
     #     self.current_hand_amount_bet+=amount
 
-    async def make_bet(self, pot_state : PotState):
+    async def make_bet(self, pot_state : PotState, session: ClientSession=None) -> PlayerBetResponse:
         ### prepare the JSON information package to send to player to make a betting decision: 
         
         # @TODO Implement API to connect to frontend. 
@@ -74,23 +78,25 @@ class Player(Entity):
         ## 1**) send request to player's ip address, await resposne.
         ## this should already be validated as the pre_bet_state is betting constraints served to player
         
+
+
         response = PlayerBetResponse({
             "pid": self.pid,
             "player_funds" : self.funds,
             "role": self.role,
             "action" : "Fold", 
             "amount" : 0,
+
         })
 
         # update local player records with response. 
         self.funds -= response.amount_bet
         self.current_hand_amount_bet += response.amount
+        asyncio.sleep(0.01)
         return response
 
 
 ###########
-
-
 
 
 
@@ -118,10 +124,13 @@ class Board(Entity):
     def best_hand(self, player_hand : List[Card]):
         pass
 
-    def show(self):
-        print(self.stage) ## for now. 
+    def show(self)->None:
+        print(self.cards) ## for now. 
 
-    def cards_dealt(self) -> int:
+    def get_state(self) -> List[Card]:
+        return(self.cards)
+
+    def _cards_dealt(self) -> int:
         '''Number of cards dealt. 3 on FLOP, 1 On turn, 1 on river.'''
         if self.stage == BoardStage.PREFLOP:
             return 3
@@ -152,13 +161,13 @@ class Deck(Entity):
         Removed cards returned for testing
         '''
         cards = []
-        for i in range(0, entity.cards_dealt()):
+        for i in range(0, entity._cards_dealt()):
             card = self.cards.pop()
             entity.add_card(card)    
             cards.append(card)   
         return cards
     
-    def cards_dealt(self) -> int:
+    def _cards_dealt(self) -> int:
         return 0
     
 

@@ -5,6 +5,9 @@ Fixtures are passed as arguments to test functions
 
 import pytest
 from models import Deck, Player, Board, BoardStage, PlayerBetResponse, Pot, PotState, Game
+import asyncio
+from aiohttp import ClientSession
+from unittest.mock import patch
 
 BIG_BLIND = 20
 INITIAL_PLAYER_FUNDS = 50
@@ -28,11 +31,11 @@ def player_list_fix():
 @pytest.fixture
 def pot_fix_preflop(player_list_fix):
     '''For betting tests'''
-    pot = Pot(bb_amount = BIG_BLIND, players = player_list_fix)
+    pot = Pot(bb_amount = BIG_BLIND)
     return pot
 
 @pytest.fixture
-def pot_fix_flop(player_list_fix):
+def pot_fix_flop():
     '''For betting tests'''
     # I just want to set potstate
     new_pot_state = PotState({
@@ -41,7 +44,7 @@ def pot_fix_flop(player_list_fix):
         'minimum_raise' : 100,
         'pot_size' : 1000
     })
-    pot = Pot(bb_amount = BIG_BLIND, players = player_list_fix)
+    pot = Pot(bb_amount = BIG_BLIND)
     pot.overwrite_pot_state(new_pot_state)
     return pot
 
@@ -49,6 +52,19 @@ def pot_fix_flop(player_list_fix):
 @pytest.fixture
 def game_fix():
     return Game()
+
+
+@pytest.fixture
+async def session():
+    with patch("aiohttp.ClientSession") as mock:
+        yield mock
+
+# @pytest.fixture
+# def event_loop():
+#     asyncio.get_event_loop_policy().set_event_loop(asyncio.new_event_loop())
+#     loop = asyncio.get_event_loop()
+#     yield loop
+#     loop.close()
 
 
 

@@ -1,11 +1,13 @@
 from models.entities import Deck, Board, BoardStage, Player, PlayerBetResponse
-from typing import List, Dict
+from typing import List, Dict, Union
 from uuid import UUID
-from models.definitions import PotState, PlayerBetResponse, BettingRoundRecord
+from models.definitions import PotState, PlayerBetResponse, BettingRoundRecord, GameState
 import pprint
 from pydantic import BaseModel, ConfigDict
 from models.config import * # Global variables, better practice to use json.
 from models.pot import Pot
+from aiohttp import ClientSession
+import asyncio
 
 
 
@@ -15,9 +17,9 @@ class Game(BaseModel):
     players : List[Player] = [Player(pid = i, funds = INITIAL_PLAYER_FUNDS, betting_status = "active") for i in range(1, NUM_PLAYERS+1)]
     pot : Pot = Pot(bb_amount=40)
     sb_index : int = 0
-
-    # I do want this class to deal with hand data persistence. 
-    hand_history = {"PREFLOP": [], "FLOP":[], "TURN":[], "RIVER":[]} 
+    deck : Deck = Deck()
+    board : Board = Board()
+    hand_history : Dict[str, List[BettingRoundRecord]] = {"PREFLOP": [], "FLOP":[], "TURN":[], "RIVER":[]} 
 
 
     model_config = ConfigDict(arbitrary_types_allowed=True) # very important to circumvent thorough validation of created types.
@@ -31,15 +33,23 @@ class Game(BaseModel):
             return method(self, *args, **kw)
         return wrapper
 
+    def clear_board(self):
+        self.deck : Deck = Deck()
+        self.board : Board = Board()
+
+
     async def play_hand(self):
         # Initialize clean Deck and Board
-        deck = Deck()
-        board = Board()
+        self.clear_board()
+        for player in self.players:
+            self.deck.deal_cards(player)
 
         for round in self.rounds:
-            board.set_round(round)
+            self.board.set_round(round)
+            self.deck.deal_cards(self.board)
+
             # 1) Show Board
-            board.show()  ## Once we have a frontend, this game logic will go there. 
+            self.board.show()  ## Once we have a frontend, this game logic will go there. 
             # 2) Betting Round 
             self.update_player_turns()
 
@@ -61,24 +71,29 @@ class Game(BaseModel):
     @next_sb_turn
     def update_player_turns(self) -> None:
         '''
-        copies the list starting at sb_index and wrapping around
-        Increases the sb_index turn
+        Copies the list starting at sb_index and wrapping around
+        Increases the sb_index turn through decorator
         '''
         indx =  self.sb_index
-        print(f"MY index : {indx}")
-        # self.players = self.players[indx:] + self.players[:indx]
         self.players.append(self.players.pop(0)) # one at a time.
  
 
-    def persist_player_action(self, response: PlayerBetResponse, betting_round : BoardStage):
+    def persist_player_action(self, response: PlayerBetResponse, betting_round : BoardStage) -> None:
         
         player_id = "player" + str(response['pid'])
-        betting_record = BettingRoundRecord(response=response, pot_state=self.pot.get_state()) 
-        self.hand_history[betting_round.name].append({player_id : betting_record} )
+        betting_record = BettingRoundRecord(pid= response['pid'], 
+                                            response=response, 
+                                            pot_state=GameState(pot=self.pot.get_state(),  board=self.board.get_state())) 
+        self.hand_history[betting_round.name].append(betting_record)
+
+
+    def persist_betting_round(self):
+        '''Save self.hand_history somewhere'''
+        # @TODO persist to DB
         pass
 
 
-    async def betting_round(self, board_stage : BoardStage):
+    async def betting_round(self, board_stage : BoardStage, session: ClientSession = None) -> None:  
         '''
         Single betting round ie preflop or flop or etc. 
         Awaits active player actions
@@ -87,20 +102,20 @@ class Game(BaseModel):
         active_players = len(self.players)
         players_to_call = active_players
         while players_to_call != 0:
-            for player in self.players:
+            for turn_index, player in enumerate(self.players):
                 if players_to_call == 0:
                     break
                 if player.get_betting_status() == "active":
 
                     # NOW) the tailored pot state is sent to player with their respective call price. 
                     # pot_copy = self.get_tailored_pot_state(player)  ## NOT NEEDED ?
-                    response : PlayerBetResponse = await player.make_bet(self.pot.get_state())
+                    response : Union[PlayerBetResponse, None] = await player.make_bet(self.pot.get_state(), session=session)  ## AWAITED?
                     
                     # NOW) persist betting record for player. 
-                    self._persist_player_action(response)
+                    self.persist_player_action(response, board_stage)
                     
                     # NOW) THEN WE UPDATE pot state with player response. this way we store the pot_state at the time before the player makes his move
-                    self.update_pot_state(response, board_stage)
+                    self.pot.update_pot_state(response, board_stage, turn_index)
                     player_action =  response['action']
                     if  player_action == "raise":
                         players_to_call = active_players-1 # all active players
@@ -114,6 +129,8 @@ class Game(BaseModel):
                     
         print("betting round over!")
         self.persist_betting_round()
+        await asyncio.sleep(0.1)  ## might be necessary until we have the calls
+        ## end function
 
 
             
