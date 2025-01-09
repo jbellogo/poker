@@ -4,7 +4,7 @@ Card entities are Card object owners: Deck, Board, and Players.
 
 from pydantic import BaseModel
 from models.definitions import Card, Suit, Rank, PotState, PlayerBetResponse, BoardStage
-from typing import List, Union, Literal, Tuple
+from typing import List, Union, Literal, Tuple, Optional
 import random
 from enum import IntEnum
 from uuid import UUID
@@ -65,7 +65,10 @@ class Player(Entity):
     #     ''' this is only used for testing'''
     #     self.current_hand_amount_bet+=amount
 
-    async def make_bet(self, pot_state : PotState, session: ClientSession=None) -> PlayerBetResponse:
+    async def make_bet(self) -> Optional[PlayerBetResponse]: 
+        '''
+        pot_state : PotState argument neeed
+        '''
         ### prepare the JSON information package to send to player to make a betting decision: 
         
         # @TODO Implement API to connect to frontend. 
@@ -78,21 +81,20 @@ class Player(Entity):
         ## 1**) send request to player's ip address, await resposne.
         ## this should already be validated as the pre_bet_state is betting constraints served to player
         
-
-
         response = PlayerBetResponse({
             "pid": self.pid,
             "player_funds" : self.funds,
+            "amount_bet" : 55,
             "role": self.role,
             "action" : "Fold", 
-            "amount" : 0,
-
+            "hand" : self.hand,
         })
 
-        # update local player records with response. 
+
+        # # update local player records with response. 
         self.funds -= response.amount_bet
         self.current_hand_amount_bet += response.amount
-        asyncio.sleep(0.01)
+        await asyncio.sleep(1)
         return response
 
 

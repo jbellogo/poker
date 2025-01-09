@@ -1,5 +1,5 @@
 from models.entities import Deck, Board, BoardStage, Player, PlayerBetResponse
-from typing import List, Dict, Union
+from typing import List, Dict, Optional
 from uuid import UUID
 from models.definitions import PotState, PlayerBetResponse, BettingRoundRecord, GameState
 import pprint
@@ -11,25 +11,33 @@ import asyncio
 
 
 
-class Game(BaseModel):
-    # variables
-    rounds  : List[BoardStage] = [BoardStage.PREFLOP, BoardStage.FLOP, BoardStage.TURN, BoardStage.RIVER]
-    players : List[Player] = [Player(pid = i, funds = INITIAL_PLAYER_FUNDS, betting_status = "active") for i in range(1, NUM_PLAYERS+1)]
-    pot : Pot = Pot(bb_amount=40)
-    sb_index : int = 0
-    deck : Deck = Deck()
-    board : Board = Board()
-    hand_history : Dict[str, List[BettingRoundRecord]] = {"PREFLOP": [], "FLOP":[], "TURN":[], "RIVER":[]} 
+class Game():
+    # Input
+
+    def __init__(self, num_players : int, bb_amount:int):
+        self.num_players = num_players
+
+        # variables
+        self.rounds  : List[BoardStage] = [BoardStage.PREFLOP, BoardStage.FLOP, BoardStage.TURN, BoardStage.RIVER]
+        self.players : List[Player] = [Player(pid = i, funds = INITIAL_PLAYER_FUNDS, betting_status = "active") for i in range(1, num_players+1)]
+
+        self.pot : Pot = Pot(bb_amount=bb_amount)
+        self. sb_index : int = 0
+        self.deck : Deck = Deck()
+        self.board : Board = Board()
+        self.hand_history : Dict[str, List[BettingRoundRecord]] = {"PREFLOP": [], "FLOP":[], "TURN":[], "RIVER":[]} 
 
 
-    model_config = ConfigDict(arbitrary_types_allowed=True) # very important to circumvent thorough validation of created types.
+    # model_config = ConfigDict(arbitrary_types_allowed=True) # very important to circumvent thorough validation of created types.
+
+
 
 
     def next_sb_turn(method):
         '''decorator, increases modular count for small_blin index, corresponding to next turn.'''
         def wrapper(self, *args, **kw):
             self.sb_index += 1
-            self.sb_index %= NUM_PLAYERS
+            self.sb_index %= self.num_players
             return method(self, *args, **kw)
         return wrapper
 
@@ -83,9 +91,12 @@ class Game(BaseModel):
         player_id = "player" + str(response['pid'])
         betting_record = BettingRoundRecord(pid= response['pid'], 
                                             response=response, 
-                                            pot_state=GameState(pot=self.pot.get_state(),  board=self.board.get_state())) 
+                                            game_state=GameState(pot=self.pot.get_state(),  board=self.board.get_state())) 
         self.hand_history[betting_round.name].append(betting_record)
 
+
+    def get_hand_history(self):
+        return self.hand_history
 
     def persist_betting_round(self):
         '''Save self.hand_history somewhere'''
@@ -101,16 +112,29 @@ class Game(BaseModel):
         '''
         active_players = len(self.players)
         players_to_call = active_players
+        tasks = [] # asyncio.gather?
         while players_to_call != 0:
             for turn_index, player in enumerate(self.players):
+                print(f"players to call : {players_to_call}")
+
+                
                 if players_to_call == 0:
                     break
+                print("LOOP!!!")  ## Now there is an issue with Loop, we should have 3 iterations but we have at least 4!!!
                 if player.get_betting_status() == "active":
+                    ############################################################################################################
+                    #############  asyncio stuff 
+                    ############################################################################################################
+                    
+                    # tasks.append(asyncio.create_task(f(obj, t)))
 
                     # NOW) the tailored pot state is sent to player with their respective call price. 
                     # pot_copy = self.get_tailored_pot_state(player)  ## NOT NEEDED ?
-                    response : Union[PlayerBetResponse, None] = await player.make_bet(self.pot.get_state(), session=session)  ## AWAITED?
-                    
+                    response : Optional[PlayerBetResponse] = await player.make_bet()  ## AWAITED?
+
+                   
+                    ############################################################################################################
+                    ############################################################################################################
                     # NOW) persist betting record for player. 
                     self.persist_player_action(response, board_stage)
                     

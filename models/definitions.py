@@ -85,7 +85,7 @@ class BettingRoundRecord(TypedDict):
     Not tested yet
     '''
     pid : int
-    game : GameState     # the state before player made their move. 
+    game_state : GameState     # the state before player made their move. 
     response : PlayerBetResponse # The move the player made given the pot_state
 
 ################################################################################################

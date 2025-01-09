@@ -8,6 +8,7 @@ from models import Deck, Player, Board, BoardStage, PlayerBetResponse, Pot, PotS
 import asyncio
 from aiohttp import ClientSession
 from unittest.mock import patch
+import pytest_asyncio
 
 BIG_BLIND = 20
 INITIAL_PLAYER_FUNDS = 50
@@ -51,10 +52,10 @@ def pot_fix_flop():
 
 @pytest.fixture
 def game_fix():
-    return Game()
+    return Game(num_players=3)
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def session():
     with patch("aiohttp.ClientSession") as mock:
         yield mock

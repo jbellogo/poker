@@ -1,6 +1,6 @@
 import pytest
 from models import Deck, Player, Board, BoardStage, PlayerBetResponse, Pot
-from unittest.mock import Mock
+from unittest.mock import Mock, AsyncMock
 from typing import List# Tuple
 import pprint
 import asyncio
@@ -39,24 +39,24 @@ async def test_GAME_betting_round(session: ClientSession, monkeypatch, game_fix)
     actions = [('call', 20), ('call',20), ('call', 20)] # @TODO the calling amount should not need to be input by players
     player_actions = get_player_actions(actions)
 
-    test_mock = Mock(side_effect=player_actions)
+    test_mock = AsyncMock(side_effect=player_actions)
     monkeypatch.setattr(Player, "make_bet", test_mock)
     await game_fix.betting_round(board_stage=round, session=session)   ## @TODO I'm thinking we will need asyncio.gather()
     hand_history = game_fix.get_hand_history()['PREFLOP'] # This is the thing
 
     pprint.pprint(hand_history)
 
-    assert(hand_history[0]['player1']['response'] == {
+    assert(hand_history[0]['response'] == {
         'action': 'call',
         'amount_bet': 20,
         'pid': 1,
         'player_funds': 50})
-    assert(hand_history[1]['player2']['response'] == {
+    assert(hand_history[1]['response'] == {
         'action': 'call',
         'amount_bet': 20,
         'pid': 2,
         'player_funds': 50})
-    assert(hand_history[2]['player3']['response'] == {
+    assert(hand_history[2]['response'] == {
         'action': 'call',
         'amount_bet': 20,
         'pid': 3,
@@ -64,19 +64,19 @@ async def test_GAME_betting_round(session: ClientSession, monkeypatch, game_fix)
 
     assert(len(hand_history)==3) # only three bets all call.
     # These represent the state player i sees before performing his action !!!
-    assert(hand_history[0]['player1']['pot_state'] == {
+    assert(hand_history[0]['game_state']['pot'] == {
       "call_amount" : 20,
       "check_allowed" : False,
       "minimum_raise" : 40,
       "pot_size" : 0,
     })
-    assert(hand_history[1]['player2']['pot_state'] == {
+    assert(hand_history[1]['game_state']['pot'] == {
       "call_amount" : 20,
       "check_allowed" : False,
       "minimum_raise" : 40,
       "pot_size" : 20,
     })
-    assert(hand_history[2]['player3']['pot_state'] == {
+    assert(hand_history[2]['game_state']['pot'] == {
       "call_amount" : 20,
       "check_allowed" : False,
       "minimum_raise" : 40,
