@@ -49,10 +49,12 @@ def pot_fix_flop():
     pot.overwrite_pot_state(new_pot_state)
     return pot
 
+FIX_NUM_PLAYERS =3
+FIX_SB_AMOUNT = 20
 
 @pytest.fixture
 def game_fix():
-    return Game(num_players=3)
+    return Game(num_players=FIX_NUM_PLAYERS, sb_amount=FIX_SB_AMOUNT)
 
 
 @pytest_asyncio.fixture

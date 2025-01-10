@@ -34,6 +34,7 @@ async def test_GAME_betting_round(session: ClientSession, monkeypatch, game_fix)
     '''
     Situation: All players call
     Preflop stage, no checking allowed.
+    game_fix num_players=3 and sb_amount=20
     '''
     round = BoardStage.PREFLOP
     actions = [('call', 20), ('call',20), ('call', 20)] # @TODO the calling amount should not need to be input by players
@@ -44,13 +45,25 @@ async def test_GAME_betting_round(session: ClientSession, monkeypatch, game_fix)
     await game_fix.betting_round(board_stage=round, session=session)   ## @TODO I'm thinking we will need asyncio.gather()
     hand_history = game_fix.get_hand_history()['PREFLOP'] # This is the thing
 
+
     pprint.pprint(hand_history)
+    assert(len(hand_history)==3) # only three bets all call.
+
 
     assert(hand_history[0]['response'] == {
         'action': 'call',
         'amount_bet': 20,
         'pid': 1,
         'player_funds': 50})
+    # These represent the state player i sees before performing his action !!!
+    assert(hand_history[0]['game_state']['pot'] == {
+        'call_amount' : 40,
+        'check_allowed' : False,
+        'minimum_raise' : 80,
+        'pot_size' : 0})
+
+
+
     assert(hand_history[1]['response'] == {
         'action': 'call',
         'amount_bet': 20,
@@ -62,14 +75,6 @@ async def test_GAME_betting_round(session: ClientSession, monkeypatch, game_fix)
         'pid': 3,
         'player_funds': 50})
 
-    assert(len(hand_history)==3) # only three bets all call.
-    # These represent the state player i sees before performing his action !!!
-    assert(hand_history[0]['game_state']['pot'] == {
-      "call_amount" : 20,
-      "check_allowed" : False,
-      "minimum_raise" : 40,
-      "pot_size" : 0,
-    })
     assert(hand_history[1]['game_state']['pot'] == {
       "call_amount" : 20,
       "check_allowed" : False,

@@ -24,12 +24,12 @@ class Pot():
         ]
     }
     '''   
-    def __init__(self, bb_amount:int): 
-        self.sb_amount : int = bb_amount/2 
-        self.bb_amount : int = bb_amount
-        self.pot_state : PotState = PotState(call_amount = bb_amount,
+    def __init__(self, sb_amount:int): 
+        self.sb_amount : int = sb_amount 
+        self.bb_amount : int = sb_amount*2
+        self.pot_state : PotState = PotState(call_amount = self.bb_amount,
                                              check_allowed=False,   # Default
-                                            minimum_raise=2*bb_amount,
+                                            minimum_raise=2*self.bb_amount,
                                             pot_size=0) ## Initial default. 
 
 
@@ -39,7 +39,7 @@ class Pot():
         '''
         return self.pot_state
     
-    def update_pot_state(self, last_action : PlayerBetResponse, board_stage : BoardStage, turn_index :int):
+    def update_pot_state(self, last_action : PlayerBetResponse, board_stage : BoardStage, turn_index :int) -> PotState:
         print("LAST PLAYER ACTION: ")
         print(last_action)
         action : str = last_action['action']
@@ -59,6 +59,8 @@ class Pot():
                 self.pot_state['check_allowed'] = True
             else:
                 self.pot_state['check_allowed'] = False
+
+        return self.pot_state.copy() 
 
  # check = True <-> it is the Smallblind's turn. After only if all past actions are check. 
         # When is checking allowed? if board_stage is advanced and everyone has checked.

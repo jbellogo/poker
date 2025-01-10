@@ -14,22 +14,21 @@ import asyncio
 class Game():
     # Input
 
-    def __init__(self, num_players : int, bb_amount:int):
+    def __init__(self, num_players : int, sb_amount:int):
         self.num_players = num_players
 
         # variables
         self.rounds  : List[BoardStage] = [BoardStage.PREFLOP, BoardStage.FLOP, BoardStage.TURN, BoardStage.RIVER]
         self.players : List[Player] = [Player(pid = i, funds = INITIAL_PLAYER_FUNDS, betting_status = "active") for i in range(1, num_players+1)]
 
-        self.pot : Pot = Pot(bb_amount=bb_amount)
-        self. sb_index : int = 0
-        self.deck : Deck = Deck()
+        self.pot : Pot = Pot(sb_amount=sb_amount)
+        self.sb_index : int = 0
+        self.deck : Deck =  Deck()  ## Hmmm don't know how I feel about this
         self.board : Board = Board()
         self.hand_history : Dict[str, List[BettingRoundRecord]] = {"PREFLOP": [], "FLOP":[], "TURN":[], "RIVER":[]} 
 
 
     # model_config = ConfigDict(arbitrary_types_allowed=True) # very important to circumvent thorough validation of created types.
-
 
 
 
@@ -120,21 +119,14 @@ class Game():
                 
                 if players_to_call == 0:
                     break
-                print("LOOP!!!")  ## Now there is an issue with Loop, we should have 3 iterations but we have at least 4!!!
                 if player.get_betting_status() == "active":
-                    ############################################################################################################
-                    #############  asyncio stuff 
-                    ############################################################################################################
                     
-                    # tasks.append(asyncio.create_task(f(obj, t)))
 
                     # NOW) the tailored pot state is sent to player with their respective call price. 
-                    # pot_copy = self.get_tailored_pot_state(player)  ## NOT NEEDED ?
+                    
                     response : Optional[PlayerBetResponse] = await player.make_bet()  ## AWAITED?
 
                    
-                    ############################################################################################################
-                    ############################################################################################################
                     # NOW) persist betting record for player. 
                     self.persist_player_action(response, board_stage)
                     
