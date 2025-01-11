@@ -3,7 +3,6 @@ from typing import List, Dict, Optional
 from uuid import UUID
 from models.definitions import *
 import pprint
-from pydantic import BaseModel, ConfigDict
 from models.config import * # Global variables, better practice to use json.
 from models.pot import Pot
 from aiohttp import ClientSession
@@ -29,9 +28,6 @@ class Game():
 
 
     # model_config = ConfigDict(arbitrary_types_allowed=True) # very important to circumvent thorough validation of created types.
-
-
-
     def next_sb_turn(method):
         '''decorator, increases modular count for small_blin index, corresponding to next turn.'''
         def wrapper(self, *args, **kw):
@@ -64,14 +60,11 @@ class Game():
         self.players.append(self.players.pop(0)) # one at a time.
  
 
-    def persist_player_action(self, response: PlayerBetResponse, game_state: GameState) -> None:
-        
-        player_id = "player" + str(response['pid'])
+    def persist_player_action(self, response: PlayerBetResponse, game_state: GameState) -> None:        
         betting_record = BettingRoundRecord(pid= response['pid'], 
                                             response=response, 
                                             game_state=game_state) 
-        pprint.pprint(game_state)
-        stage : str = game_state['board']['stage'].value
+        stage : str = game_state['board']['stage']
         self.hand_history[stage].append(betting_record)
 
 
@@ -128,11 +121,11 @@ class Game():
         self.update_player_turns()  ## needs to go before initialize_players state
         self.initialize_players_state()
 
-        while players_to_call != 0:
-            for turn_index, player in enumerate(self.players):  ## This will need to change when folding
-                print(f"players to call : {players_to_call}")
 
-                
+        #####@TODO @ NNNNNOOOOW we deal with this players_to_Call things, wait for everyone to act don't assume checking.
+        while players_to_call != 0:
+            # @TODO get rid of turn_index if not needed
+            for turn_index, player in enumerate(self.players):  ## This will need to change when folding                
                 if players_to_call == 0:
                     break
                 if player.get_betting_status() == "active":
@@ -141,11 +134,11 @@ class Game():
                     response : Optional[PlayerBetResponse] = await player.make_bet(state)  ## AWAITED?
                     # NOW) persist betting record for player. 
                     self.persist_player_action(response, state)
-                    
                     # NOW) THEN WE UPDATE pot state with player response. this way we store the pot_state at the time before the player makes his move
-                    self.pot.update_pot_state(response, board_stage, turn_index)
+                    self.pot.update_pot_state(player, response, turn_index)
 
-                    # MAke this more concise when you support folding. 
+
+                    # @TODO MAke this more concise when you support folding. 
                     player_action =  response['action']
                     if  player_action == "raise":
                         players_to_call = active_players-1 # all active players
@@ -154,10 +147,7 @@ class Game():
                         active_players-=1
                         player.set_status("fold")
                     elif player_action == "call" or player_action == "check":
-                        players_to_call -=1
-                    
-                    
-        print("betting round over!")
+                        players_to_call -=1    
         self.persist_betting_round()
         await asyncio.sleep(0.1)  ## might be necessary until we have the calls
         ## end function

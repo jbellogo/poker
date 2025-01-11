@@ -82,7 +82,7 @@ class Player(Entity):
     async def make_bet(self, game_state: GameState) -> Optional[PlayerBetResponse]: 
         '''
         pot_state : PotState argument neeed
-        NEEDS VALIDATORS. 
+        @TODO NEEDS VALIDATORS of call amounts, minimum raises, blinds in preflop round, etc. 
         Wrapper that Uses API response from request_betting_response() and updates local player fields.
         '''
         ### prepare the JSON information package to send to player to make a betting decision: 
@@ -133,7 +133,7 @@ class Board(Entity):
         
     #     return indicator
     def set_round(self, stage : BoardStage):
-        self.stage = stage
+        self.stage = stage.value
 
     def best_hand(self, player_hand : List[Card]):
         pass

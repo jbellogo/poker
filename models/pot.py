@@ -52,15 +52,15 @@ class Pot():
             self.pot_state['minimum_raise'] = 2*self.bb_amount
 
     
-    def update_pot_state(self, last_action : PlayerBetResponse, board_stage : BoardStage, turn_index :int) -> None:
+    def update_pot_state(self, last_active_player: Player, last_action : PlayerBetResponse, turn_index :int) -> None:
         print("LAST PLAYER ACTION: ")
         print(last_action)
         action : str = last_action['action']
         amount : int = last_action['amount_bet']
         self.pot_state['pot_size'] += amount
+
+        # @TODO there is an issue with call amount. test_round4 is failing
         
-        # print(board_stage)
-        # print(last_action)
         # Basically everytime there is a raise, we should update check_allowed and call_amount
 
         if action=='check':
@@ -68,15 +68,11 @@ class Pot():
         else:
             self.pot_state['check_allowed'] = False
 
-
- # check = True <-> it is the Smallblind's turn. After only if all past actions are check. 
-        # When is checking allowed? if board_stage is advanced and everyone has checked.
-        # sO we need a way to keep track of turns. 
         
         # Fine tunning:
         if action == 'raise':
             self.pot_state['check_allowed'] = False
-            self.pot_state['call_amount'] = amount
+            self.pot_state['call_amount'] = last_active_player.f_amount_bet_this_hand() # their total becomes the calling amount
             self.pot_state['minimum_raise'] = 2*amount
 
 
