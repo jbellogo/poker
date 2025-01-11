@@ -37,7 +37,7 @@ async def test_GAME_betting_round(session: ClientSession, monkeypatch, game_fix)
     game_fix num_players=3 and sb_amount=20
     '''
     round = BoardStage.PREFLOP
-    actions = [('call', 20), ('call',20), ('call', 20)] # @TODO the calling amount should not need to be input by players
+    actions = [('call', 40), ('call',40), ('call', 40)] # @TODO the calling amount should not need to be input by players
     player_actions = get_player_actions(actions)
 
     test_mock = AsyncMock(side_effect=player_actions)
@@ -50,43 +50,44 @@ async def test_GAME_betting_round(session: ClientSession, monkeypatch, game_fix)
     assert(len(hand_history)==3) # only three bets all call.
 
 
-    assert(hand_history[0]['response'] == {
-        'action': 'call',
-        'amount_bet': 20,
-        'pid': 1,
-        'player_funds': 50})
     # These represent the state player i sees before performing his action !!!
     assert(hand_history[0]['game_state']['pot'] == {
         'call_amount' : 40,
         'check_allowed' : False,
         'minimum_raise' : 80,
         'pot_size' : 0})
+    assert(hand_history[0]['response'] == {
+        'action': 'call',
+        'amount_bet': 40,
+        'pid': 1,
+        'player_funds': 50})
 
 
-
+    assert(hand_history[1]['game_state']['pot'] == {
+        "call_amount" : 40,
+        "check_allowed" : False,
+        "minimum_raise" : 80,
+        "pot_size" : 40,
+      })
     assert(hand_history[1]['response'] == {
         'action': 'call',
-        'amount_bet': 20,
+        'amount_bet': 40,
         'pid': 2,
         'player_funds': 50})
+
+
+    assert(hand_history[2]['game_state']['pot'] == {
+      "call_amount" : 40,
+      "check_allowed" : False,
+      "minimum_raise" : 80,
+      "pot_size" : 80,
+    })
     assert(hand_history[2]['response'] == {
         'action': 'call',
-        'amount_bet': 20,
+        'amount_bet': 40,
         'pid': 3,
         'player_funds': 50})
 
-    assert(hand_history[1]['game_state']['pot'] == {
-      "call_amount" : 20,
-      "check_allowed" : False,
-      "minimum_raise" : 40,
-      "pot_size" : 20,
-    })
-    assert(hand_history[2]['game_state']['pot'] == {
-      "call_amount" : 20,
-      "check_allowed" : False,
-      "minimum_raise" : 40,
-      "pot_size" : 40,
-    })
 
 
 

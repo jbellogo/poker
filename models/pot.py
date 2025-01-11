@@ -37,9 +37,9 @@ class Pot():
         '''
         returns the necessary information about the pot state for any player to make a decision. 
         '''
-        return self.pot_state
+        return self.pot_state.copy()
     
-    def update_pot_state(self, last_action : PlayerBetResponse, board_stage : BoardStage, turn_index :int) -> PotState:
+    def update_pot_state(self, last_action : PlayerBetResponse, board_stage : BoardStage, turn_index :int) -> None:
         print("LAST PLAYER ACTION: ")
         print(last_action)
         action : str = last_action['action']
@@ -60,7 +60,6 @@ class Pot():
             else:
                 self.pot_state['check_allowed'] = False
 
-        return self.pot_state.copy() 
 
  # check = True <-> it is the Smallblind's turn. After only if all past actions are check. 
         # When is checking allowed? if board_stage is advanced and everyone has checked.

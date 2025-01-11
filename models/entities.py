@@ -68,6 +68,7 @@ class Player(Entity):
     async def make_bet(self) -> Optional[PlayerBetResponse]: 
         '''
         pot_state : PotState argument neeed
+        NEEDS VALIDATORS. 
         '''
         ### prepare the JSON information package to send to player to make a betting decision: 
         

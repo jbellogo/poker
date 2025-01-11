@@ -126,7 +126,7 @@ class Game():
                     
                     response : Optional[PlayerBetResponse] = await player.make_bet()  ## AWAITED?
 
-                   
+                    # @TODO the issue is here! before persisting, we need to copy the pot state. Now get_state returns the copy
                     # NOW) persist betting record for player. 
                     self.persist_player_action(response, board_stage)
                     
