@@ -3,7 +3,7 @@ Card entities are Card object owners: Deck, Board, and Players.
 '''
 
 from pydantic import BaseModel
-from models.definitions import Card, Suit, Rank, PotState, PlayerBetResponse, BoardStage, PlayerAction, PlayerStatus, PlayerRole
+from models.definitions import *
 from typing import List, Union, Literal, Tuple, Optional
 import random
 from enum import IntEnum
@@ -43,7 +43,7 @@ class Player(Entity):
     number_cards_dealt : int = 2
     betting_status : PlayerStatus = "inactive"
     hand : Tuple[Card, Card] = None
-    amount_bet_current_hand : int = 0
+    amount_bet_this_hand : int = 0
 
 
 
@@ -62,11 +62,11 @@ class Player(Entity):
     def set_status(self, new_status : Literal["active", "fold", "all-in", "inactive"]):
         self.betting_status = new_status
     
-    def amount_bet_this_hand(self):
-        return self.amount_bet_current_hand
+    def f_amount_bet_this_hand(self):
+        return self.amount_bet_this_hand
     
     def reset_amount_bet_this_hand(self):
-        self.amount_bet_current_hand = 0
+        self.amount_bet_this_hand = 0
     
     # def add_amount_bet_this_hand(self, amount:int):
     #     ''' this is only used for testing'''
@@ -79,13 +79,14 @@ class Player(Entity):
         return None
 
 
-    async def make_bet(self) -> Optional[PlayerBetResponse]: 
+    async def make_bet(self, game_state: GameState) -> Optional[PlayerBetResponse]: 
         '''
         pot_state : PotState argument neeed
         NEEDS VALIDATORS. 
         Wrapper that Uses API response from request_betting_response() and updates local player fields.
         '''
         ### prepare the JSON information package to send to player to make a betting decision: 
+
         
         # @TODO Implement API to connect to frontend. 
         ## 1**) send request to player's ip address, await resposne.
@@ -103,9 +104,9 @@ class Player(Entity):
         # })
 
         # update local player records with response. 
-        self.funds -= response.amount_bet
-        self.betting_status = PlayerAction(response.action).to_status()  ## this one is iffy
-        self.amount_bet_current_hand += response.amount_bet
+        self.funds -= response['amount_bet']
+        self.betting_status = PlayerAction(response['action']).to_status()  ## this one is iffy
+        self.amount_bet_this_hand += response['amount_bet']
         return response
 
 
@@ -140,8 +141,8 @@ class Board(Entity):
     def show(self)->None:
         print(self.cards) ## for now. 
 
-    def get_state(self) -> List[Card]:
-        return(self.cards)
+    def get_state(self) -> BoardState:
+        return BoardState(stage=self.stage, cards =self.cards)
 
     def _cards_dealt(self) -> int:
         '''Number of cards dealt. 3 on FLOP, 1 On turn, 1 on river.'''

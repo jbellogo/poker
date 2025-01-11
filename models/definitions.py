@@ -45,12 +45,12 @@ class Card(BaseModel):
         return f"{self.rank}{self.suit}"
 
 ######## BETTING
-class BoardStage(IntEnum):
+class BoardStage(str, Enum):
     # ZERO = 0     ### Can we get rid of this one?
-    PREFLOP = 1
-    FLOP = 2
-    TURN = 3
-    RIVER = 4
+    PREFLOP = 'PREFLOP'
+    FLOP = 'FLOP'
+    TURN = 'TURN'
+    RIVER = 'RIVER'
         
 class PotState(TypedDict):
     call_amount : int

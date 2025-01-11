@@ -1,7 +1,7 @@
 from models.entities import Deck, Board, BoardStage, Player, PlayerBetResponse
 from typing import List, Dict, Optional
 from uuid import UUID
-from models.definitions import PotState, PlayerBetResponse, BettingRoundRecord, GameState
+from models.definitions import *
 import pprint
 from pydantic import BaseModel, ConfigDict
 from models.config import * # Global variables, better practice to use json.
@@ -64,13 +64,15 @@ class Game():
         self.players.append(self.players.pop(0)) # one at a time.
  
 
-    def persist_player_action(self, response: PlayerBetResponse, betting_round : BoardStage) -> None:
+    def persist_player_action(self, response: PlayerBetResponse, game_state: GameState) -> None:
         
         player_id = "player" + str(response['pid'])
         betting_record = BettingRoundRecord(pid= response['pid'], 
                                             response=response, 
-                                            game_state=GameState(pot=self.pot.get_state(),  board=self.board.get_state())) 
-        self.hand_history[betting_round.name].append(betting_record)
+                                            game_state=game_state) 
+        pprint.pprint(game_state)
+        stage : str = game_state['board']['stage'].value
+        self.hand_history[stage].append(betting_record)
 
 
     def get_hand_history(self):
@@ -102,6 +104,17 @@ class Game():
             elif i==1: player.set_role('bb')
             else: player.set_role('other')
             player.reset_amount_bet_this_hand()
+
+
+    def get_personalized_state(self, player:Player) -> GameState:
+        pot : PotState = self.pot.get_state() # this returns a copy, perfect for us
+        pot['call_amount'] -= player.f_amount_bet_this_hand()
+        board : BoardState = self.board.get_state()
+        return GameState(pot= pot, board=board)
+
+
+
+
         
 
     async def betting_round(self, board_stage : BoardStage, session: ClientSession = None) -> None:  
@@ -118,7 +131,7 @@ class Game():
         self.initialize_players_state()
 
         while players_to_call != 0:
-            for turn_index, player in enumerate(self.players):
+            for turn_index, player in enumerate(self.players):  ## This will need to change when folding
                 print(f"players to call : {players_to_call}")
 
                 
@@ -126,13 +139,16 @@ class Game():
                     break
                 if player.get_betting_status() == "active":
                     # NOW) the tailored pot state is sent to player with their respective call price. 
-                    response : Optional[PlayerBetResponse] = await player.make_bet()  ## AWAITED?
+                    state : GameState = self.get_personalized_state(player)
+                    response : Optional[PlayerBetResponse] = await player.make_bet(state)  ## AWAITED?
                     # @TODO the issue is here! before persisting, we need to copy the pot state. Now get_state returns the copy
                     # NOW) persist betting record for player. 
-                    self.persist_player_action(response, board_stage)
+                    self.persist_player_action(response, state)
                     
                     # NOW) THEN WE UPDATE pot state with player response. this way we store the pot_state at the time before the player makes his move
                     self.pot.update_pot_state(response, board_stage, turn_index)
+
+                    # MAke this more concise when you support folding. 
                     player_action =  response['action']
                     if  player_action == "raise":
                         players_to_call = active_players-1 # all active players
