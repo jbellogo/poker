@@ -67,6 +67,11 @@ class Game():
         stage : str = game_state['board']['stage']
         self.hand_history[stage].append(betting_record)
 
+    # def handle_player_action(self, response: PlayerBetResponse, game_state: GameState, player:Player) -> None:
+    #     if response['action'] # update player status
+
+    #     self.persist_player_action(response, game_state)
+
 
     def get_hand_history(self):
         return self.hand_history
@@ -115,39 +120,34 @@ class Game():
         Updates player status from action response, ie all-in, folded, etc.
         '''
         active_players = len(self.players)
-        players_to_call = active_players
         tasks = [] # asyncio.gather?
         self.initialize_game_state(board_stage)
         self.update_player_turns()  ## needs to go before initialize_players state
         self.initialize_players_state()
 
-
-        #####@TODO @ NNNNNOOOOW we deal with this players_to_Call things, wait for everyone to act don't assume checking.
-        while players_to_call != 0:
-            # @TODO get rid of turn_index if not needed
-            for turn_index, player in enumerate(self.players):  ## This will need to change when folding                
-                if players_to_call == 0:
-                    break
+        # @TODO NOOOOW we are working with te
+        while True:
+            number_of_raises = 0
+            for player in self.players:
+                print(player)               
                 if player.get_betting_status() == "active":
                     # NOW) the tailored pot state is sent to player with their respective call price. 
                     state : GameState = self.get_personalized_state(player)
-                    response : Optional[PlayerBetResponse] = await player.make_bet(state)  ## AWAITED?
+                    print(f"calling await player.make_bet(), num raises={number_of_raises}")
+                    response : Optional[PlayerBetResponse] = await player.make_bet(state)
+
                     # NOW) persist betting record for player. 
                     self.persist_player_action(response, state)
                     # NOW) THEN WE UPDATE pot state with player response. this way we store the pot_state at the time before the player makes his move
-                    self.pot.update_pot_state(player, response, turn_index)
+                    self.pot.update_pot_state(player, response)
+
+                    if  response['action'] == "raise":
+                        number_of_raises+=1  # each PLAYER CAN ONLY RAISE ONCE THOUGH @TODO implment this constraint. that's no-lmit and limit texas holdem
+                    # if response['action'] 
+            if number_of_raises == 0:
+                break
 
 
-                    # @TODO MAke this more concise when you support folding. 
-                    player_action =  response['action']
-                    if  player_action == "raise":
-                        players_to_call = active_players-1 # all active players
-                    elif player_action == "fold":
-                        players_to_call-=1
-                        active_players-=1
-                        player.set_status("fold")
-                    elif player_action == "call" or player_action == "check":
-                        players_to_call -=1    
         self.persist_betting_round()
         await asyncio.sleep(0.1)  ## might be necessary until we have the calls
         ## end function

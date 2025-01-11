@@ -45,7 +45,8 @@ class Player(Entity):
     hand : Tuple[Card, Card] = None
     amount_bet_this_hand : int = 0
 
-
+    def __str__(self):
+        return self.model_dump_json()
 
     def _cards_dealt(self) -> int:
         return self.number_cards_dealt

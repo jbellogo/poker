@@ -82,12 +82,13 @@ async def test_betting_round3(monkeypatch, game_fix):
     '''
     Situation: flop stage, check allowed, multiple raises. 
     '''
-    # PREFLOP actions:
-    actions = [('P1','call', 40), ('P2','raise',80), ('P3','call', 80), ('P1','call', 40), ('P2','check',0), ('P3','check', 0)]
-    test_mock = AsyncMock(side_effect=get_player_actions(actions))
+    actions_preflop = [('P1','call', 40), ('P2','raise',80), ('P3','call', 80), ('P1','call', 40), ('P2','check',0), ('P3','check', 0)]
+    actions_flop = [('P1','check', 0), ('P2','raise',100), ('P3','raise', 200), ('P1','call', 200), ('P2','call', 100), ('P3','check', 0)]
+    test_mock = AsyncMock(side_effect=get_player_actions(actions_preflop+actions_flop))
     monkeypatch.setattr(Player, "request_betting_response", test_mock)
-    await game_fix.betting_round(board_stage=BoardStage.PREFLOP)
 
+    # Preflop
+    await game_fix.betting_round(board_stage=BoardStage.PREFLOP)
     # FLOP actions:
     flop_initial_conditions = {
       "call_amount" : 0,
@@ -96,9 +97,8 @@ async def test_betting_round3(monkeypatch, game_fix):
       "pot_size" : 240,
     }
 
-    actions = [('P1','check', 0), ('P2','raise',100), ('P3','raise', 200), ('P1','call', 200), ('P2','call', 100), ('P3','check', 0)]
-    test_mock = AsyncMock(side_effect=get_player_actions(actions))
-    monkeypatch.setattr(Player, "request_betting_response", test_mock) # NEW mocked method!!!!!
+    # test_mock = AsyncMock(side_effect=get_player_actions(actions))
+    # monkeypatch.setattr(Player, "request_betting_response", test_mock) # NEW mocked method!!!!!
     await game_fix.betting_round(BoardStage.FLOP)
     hand_history = game_fix.get_hand_history()['FLOP']
 
@@ -124,7 +124,7 @@ async def test_betting_round4(monkeypatch, game_fix):
     Situation: pre-flop stage, player folds. 
     '''
     # PREFLOP actions:
-    actions = [('P1','call',40), ('P2','raise',80), ('P3','fold',0), ('P1','raise',160), ('P2','call',120)]   
+    actions = [('P1','call',40), ('P2','raise',80), ('P3','fold',0), ('P1','raise',160), ('P2','call',120)] # P3 actually not allowed to check   
     # with fold and call you should not have to specify, maybe we can worry about that in the frontend
     test_mock = AsyncMock(side_effect=get_player_actions(actions))
     monkeypatch.setattr(Player, "request_betting_response", test_mock)
