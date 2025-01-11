@@ -10,10 +10,6 @@ from aiohttp import ClientSession
 
 ###### Test every function in every module!!!
 
- 
-
-
-
 def get_player_actions(actions : list[tuple[str,int]]) -> List[PlayerBetResponse]:
     player_actions = []
     '''
@@ -30,7 +26,7 @@ def get_player_actions(actions : list[tuple[str,int]]) -> List[PlayerBetResponse
 
 
 @pytest.mark.asyncio
-async def test_GAME_betting_round(session: ClientSession, monkeypatch, game_fix):
+async def test_betting_round_1(session: ClientSession, monkeypatch, game_fix):
     '''
     Situation: All players call
     Preflop stage, no checking allowed.
@@ -89,112 +85,54 @@ async def test_GAME_betting_round(session: ClientSession, monkeypatch, game_fix)
         'player_funds': 50})
 
 
+@pytest.mark.asyncio
+async def test_betting_round_2(monkeypatch, game_fix, session:ClientSession):
+    '''
+    Preflop stage, no checking allowed.
+    Test single raise. Call amounts should update. 
+    '''
+    round = BoardStage.PREFLOP
+    # Situation:
+    actions = [('call', 40), ('raise',80), ('call', 80), ('call', 40)]
+    player_actions = get_player_actions(actions) # NEW
 
+    test_mock = AsyncMock(side_effect=player_actions)
+    monkeypatch.setattr(Player, "make_bet", test_mock)
+    await game_fix.betting_round(board_stage=round, session=session)
+    hand_history = game_fix.get_hand_history()['PREFLOP'] # This is the thing
 
+    # pprint.pp(hand_history)
+    assert(len(hand_history)==4) # 4 moves total
+    # These represent the state player i sees before performing his action !!!
+    # P1 sees this bellow and calls 40
+    assert(hand_history[0]['game_state']['pot'] == {
+      "call_amount" : 40,
+      "check_allowed" : False,
+      "minimum_raise" : 80,
+      "pot_size" : 0,
+    })
+    # P2 sees this bellow and raises 80
+    assert(hand_history[1]['game_state']['pot'] == {
+      "call_amount" : 40,
+      "check_allowed" : False,
+      "minimum_raise" : 80,
+      "pot_size" : 40,
+    })
+    # P3 sees this bellow and calls 80
+    assert(hand_history[2]['game_state']['pot'] == {
+      "call_amount" : 80,
+      "check_allowed" : False,
+      "minimum_raise" : 160,
+      "pot_size" : 120,
+    })
 
-# # Pot tests. Purely betting rounds. 
-# def test_betting_round1(monkeypatch, pot_fix_preflop):
-#     '''
-#     Situation: All players call
-#     Preflop stage, no checking allowed.
-#     '''
-#     round = BoardStage.PREFLOP
-#     actions = [('call', 20), ('call',20), ('call', 20)] # @TODO the calling amount should not need to be input by players
-#     player_actions = get_player_actions(actions)
-
-#     test_mock = Mock(side_effect=player_actions)
-#     monkeypatch.setattr(Player, "make_bet", test_mock)
-#     pot_fix_preflop.betting_round(round)
-#     hand_history = pot_fix_preflop.get_hand_history()['PREFLOP'] # This is the thing
-
-#     assert(hand_history[0]['player1']['response'] == {
-#         'action': 'call',
-#         'amount_bet': 20,
-#         'pid': 1,
-#         'player_funds': 50})
-#     assert(hand_history[1]['player2']['response'] == {
-#         'action': 'call',
-#         'amount_bet': 20,
-#         'pid': 2,
-#         'player_funds': 50})
-#     assert(hand_history[2]['player3']['response'] == {
-#         'action': 'call',
-#         'amount_bet': 20,
-#         'pid': 3,
-#         'player_funds': 50})
-
-#     assert(len(hand_history)==3) # only three bets all call.
-#     # These represent the state player i sees before performing his action !!!
-#     assert(hand_history[0]['player1']['pot_state'] == {
-#       "call_amount" : 20,
-#       "check_allowed" : False,
-#       "minimum_raise" : 40,
-#       "pot_size" : 0,
-#     })
-#     assert(hand_history[1]['player2']['pot_state'] == {
-#       "call_amount" : 20,
-#       "check_allowed" : False,
-#       "minimum_raise" : 40,
-#       "pot_size" : 20,
-#     })
-#     assert(hand_history[2]['player3']['pot_state'] == {
-#       "call_amount" : 20,
-#       "check_allowed" : False,
-#       "minimum_raise" : 40,
-#       "pot_size" : 40,
-#     })
-
-
-# ## passing betting arguments to player_actions fixture
-# # betting_actions = [('call', 20), ('raise',40), ('call', 40), ('call', 20)]
-# # @pytest.mark.parametrize('player_actions', [betting_actions], indirect=True)
-# def test_betting_round2(monkeypatch, pot_fix_preflop):
-#     '''
-#     Preflop stage, no checking allowed.
-#     Test single raise. Call amounts should update. 
-#     '''
-#     round = BoardStage.PREFLOP
-#     # Situation:
-#     actions = [('call', 20), ('raise',40), ('call', 40), ('call', 20)]
-#     player_actions = get_player_actions(actions) # NEW
-
-#     test_mock = Mock(side_effect=player_actions)
-#     monkeypatch.setattr(Player, "make_bet", test_mock)
-#     pot_fix_preflop.betting_round(round)
-#     hand_history = pot_fix_preflop.get_hand_history()['PREFLOP'] # This is the thing
-
-#     # pprint.pp(hand_history)
-#     assert(len(hand_history)==4) # 4 moves total
-#     # These represent the state player i sees before performing his action !!!
-#     # P1 sees this bellow and calls 20
-#     assert(hand_history[0]['player1']['pot_state'] == {
-#       "call_amount" : 20,
-#       "check_allowed" : False,
-#       "minimum_raise" : 40,
-#       "pot_size" : 0,
-#     })
-#     # P2 sees this bellow and raises 40
-#     assert(hand_history[1]['player2']['pot_state'] == {
-#       "call_amount" : 20,
-#       "check_allowed" : False,
-#       "minimum_raise" : 40,
-#       "pot_size" : 20,
-#     })
-#     # P3 sees this bellow and calls 40
-#     assert(hand_history[2]['player3']['pot_state'] == {
-#       "call_amount" : 40,
-#       "check_allowed" : False,
-#       "minimum_raise" : 80,
-#       "pot_size" : 60,
-#     })
-
-#     # P1 calls his remainding 20
-#     assert(hand_history[3]['player1']['pot_state'] == {
-#       "call_amount" : 40,
-#       "check_allowed" : False,
-#       "minimum_raise" : 80,
-#       "pot_size" : 100,
-#     })
+    # P1 calls his remainding 40
+    assert(hand_history[3]['game_state']['pot'] == {
+      "call_amount" : 80,
+      "check_allowed" : False,
+      "minimum_raise" : 160,
+      "pot_size" : 200,
+    })
 
 
 
