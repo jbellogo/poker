@@ -46,7 +46,6 @@ class Card(BaseModel):
 
 ######## BETTING
 class BoardStage(str, Enum):
-    # ZERO = 0     ### Can we get rid of this one?
     PREFLOP = 'PREFLOP'
     FLOP = 'FLOP'
     TURN = 'TURN'

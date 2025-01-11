@@ -91,6 +91,7 @@ class Game():
         updates pot_state at the beginning of betting round passed.
         '''
         self.pot.initialize_pot_state(board_stage)
+        self.board.set_round(board_stage)  # just needed for testing
 
     def initialize_players_state(self):
         '''
@@ -113,9 +114,6 @@ class Game():
         return GameState(pot= pot, board=board)
 
 
-
-
-        
 
     async def betting_round(self, board_stage : BoardStage, session: ClientSession = None) -> None:  
         '''
@@ -141,7 +139,6 @@ class Game():
                     # NOW) the tailored pot state is sent to player with their respective call price. 
                     state : GameState = self.get_personalized_state(player)
                     response : Optional[PlayerBetResponse] = await player.make_bet(state)  ## AWAITED?
-                    # @TODO the issue is here! before persisting, we need to copy the pot state. Now get_state returns the copy
                     # NOW) persist betting record for player. 
                     self.persist_player_action(response, state)
                     
