@@ -3,7 +3,7 @@ Card entities are Card object owners: Deck, Board, and Players.
 '''
 
 from pydantic import BaseModel
-from models.definitions import Card, Suit, Rank, PotState, PlayerBetResponse, BoardStage
+from models.definitions import Card, Suit, Rank, PotState, PlayerBetResponse, BoardStage, PlayerAction, PlayerStatus, PlayerRole
 from typing import List, Union, Literal, Tuple, Optional
 import random
 from enum import IntEnum
@@ -39,11 +39,12 @@ class Entity(BaseModel, ABC):
 class Player(Entity):
     pid : int
     funds : int
-    role : Literal["sb", "bb", "other"] = "other"  # they must change every round
+    role : PlayerRole = "other"  # @TODO update them every round
     number_cards_dealt : int = 2
-    betting_status : Literal["active", "fold", "all-in", "inactive"] = "inactive"
-    current_hand_amount_bet : int = 0
+    betting_status : PlayerStatus = "inactive"
     hand : Tuple[Card, Card] = None
+    amount_bet_current_hand : int = 0
+
 
 
     def _cards_dealt(self) -> int:
@@ -52,6 +53,9 @@ class Player(Entity):
     def get_betting_status(self):
         return self.betting_status
     
+    def set_role(self, role: PlayerRole)->None:
+        self.role = role
+    
     def get_id(self) -> int:
         return self.pid
 
@@ -59,43 +63,49 @@ class Player(Entity):
         self.betting_status = new_status
     
     def amount_bet_this_hand(self):
-        return self.current_hand_amount_bet
+        return self.amount_bet_current_hand
+    
+    def reset_amount_bet_this_hand(self):
+        self.amount_bet_current_hand = 0
     
     # def add_amount_bet_this_hand(self, amount:int):
     #     ''' this is only used for testing'''
     #     self.current_hand_amount_bet+=amount
 
+
+    async def request_betting_response(self) -> Optional[PlayerBetResponse]:
+        '''Actual API call'''
+        await asyncio.sleep(1)
+        return None
+
+
     async def make_bet(self) -> Optional[PlayerBetResponse]: 
         '''
         pot_state : PotState argument neeed
         NEEDS VALIDATORS. 
+        Wrapper that Uses API response from request_betting_response() and updates local player fields.
         '''
         ### prepare the JSON information package to send to player to make a betting decision: 
         
         # @TODO Implement API to connect to frontend. 
-        # pre_bet_state = {
-        #     "call_amount" : pot.get_calling_amount(),
-        #     "check_allowed" : True,
-        #     "minimum_raise" : 2*pot.get_calling_amount(),            
-        #     "pot_size" : pot.get_pot_size() 
-        # }
         ## 1**) send request to player's ip address, await resposne.
-        ## this should already be validated as the pre_bet_state is betting constraints served to player
-        
-        response = PlayerBetResponse({
-            "pid": self.pid,
-            "player_funds" : self.funds,
-            "amount_bet" : 55,
-            "role": self.role,
-            "action" : "Fold", 
-            "hand" : self.hand,
-        })
+        ## this should already be validated as the pre_bet_state is betting constraints served to player. Cannot bet more than funds!
+        response : PlayerBetResponse  = await self.request_betting_response() # pass to it a GameState and PlayerState
 
 
-        # # update local player records with response. 
+        # response = PlayerBetResponse({
+        #     "pid": self.pid,
+        #     "player_funds" : self.funds,
+        #     "amount_bet" : 55,
+        #     "role": self.role,
+        #     "action" : "Fold", 
+        #     "hand" : self.hand,
+        # })
+
+        # update local player records with response. 
         self.funds -= response.amount_bet
-        self.current_hand_amount_bet += response.amount
-        await asyncio.sleep(1)
+        self.betting_status = PlayerAction(response.action).to_status()  ## this one is iffy
+        self.amount_bet_current_hand += response.amount_bet
         return response
 
 

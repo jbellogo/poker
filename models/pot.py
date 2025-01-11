@@ -1,7 +1,7 @@
 from models.entities import BoardStage, Player, PlayerBetResponse
 from typing import List, Dict
 from uuid import UUID
-from models.definitions import PotState, PlayerBetResponse, BettingRoundRecord
+from models.definitions import PotState, PlayerBetResponse, BettingRoundRecord, PlayerStatus, PlayerAction
 import pprint
 
 
@@ -39,26 +39,34 @@ class Pot():
         '''
         return self.pot_state.copy()
     
+
+    def update_check_allowed(self, boolean:bool)->None:
+        self.pot_state['check_allowed'] = boolean
+
+    def initialize_pot_state(self, board_stage:BoardStage):
+        if board_stage == BoardStage.PREFLOP:
+            self.pot_state['check_allowed'] = False
+        else:
+            self.pot_state['check_allowed'] = True
+            self.pot_state['call_amount'] = 0
+            self.pot_state['minimum_raise'] = 2*self.bb_amount
+
+    
     def update_pot_state(self, last_action : PlayerBetResponse, board_stage : BoardStage, turn_index :int) -> None:
         print("LAST PLAYER ACTION: ")
         print(last_action)
         action : str = last_action['action']
         amount : int = last_action['amount_bet']
         self.pot_state['pot_size'] += amount
+        
         # print(board_stage)
         # print(last_action)
         # Basically everytime there is a raise, we should update check_allowed and call_amount
-        # Initially:
-        if board_stage == BoardStage.PREFLOP:
-            self.pot_state['check_allowed'] = False
 
+        if action=='check':
+            self.pot_state['check_allowed'] = True
         else:
-            if turn_index == 0:
-                self.pot_state['check_allowed'] = True
-            elif action=='check':
-                self.pot_state['check_allowed'] = True
-            else:
-                self.pot_state['check_allowed'] = False
+            self.pot_state['check_allowed'] = False
 
 
  # check = True <-> it is the Smallblind's turn. After only if all past actions are check. 

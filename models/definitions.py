@@ -70,12 +70,47 @@ class GameState(TypedDict):
     pot: PotState
     board: BoardState
 
+
+#
+class PlayerStatus(str, Enum):
+    ACTIVE = 'active'
+    INACTIVE = 'inactive' # will have 10 players created, corresponding to 10 reserved seats but they only become active when someone joins a session.
+    ALLIN = 'all-in'
+    FOLDED = 'fold'
+
+class PlayerRole(str, Enum):
+    SMALL_BLIND = 'sb'
+    BIG_BLIND = 'bb'
+    OTHER = 'other'
+
+
+class PlayerAction(str, Enum):
+    CALL = 'call'
+    RAISE = 'raise'
+    FOLD = 'fold'
+    CHECK = 'check'
+    ALLIN = 'all-in'
+
+    def to_status(self) -> PlayerStatus:
+        keys = {
+            'call': 'active',
+            'raise': 'active',
+            'fold' : 'fold',
+            'check': 'active',
+            'all-in': 'all-in'
+        }
+        return PlayerStatus(keys[self.value])
+
+
+
+
+
 class PlayerBetResponse(TypedDict):
     pid : int
     player_funds : int
     amount_bet : int 
     role : Literal["sb", "bb", "other"] = "other"
-    action : Literal["call", "raise", "fold", "check"]
+    action : PlayerAction
     hand : Tuple[Card, Card]
 
 

@@ -45,26 +45,6 @@ class Game():
         self.board : Board = Board()
 
 
-    async def play_hand(self):
-        # Initialize clean Deck and Board
-        self.clear_board()
-        for player in self.players:
-            self.deck.deal_cards(player)
-
-        for round in self.rounds:
-            self.board.set_round(round)
-            self.deck.deal_cards(self.board)
-
-            # 1) Show Board
-            self.board.show()  ## Once we have a frontend, this game logic will go there. 
-            # 2) Betting Round 
-            self.update_player_turns()
-
-            await self.betting_round(round) 
-            # Awaits player responses and uploads pot and player status. 
-            # This should update the pot and this should be made visible in real time. 
-
-
     def get_players(self) -> List[int]:
         '''
         Returns a list of PIDs to simplify tests
@@ -81,7 +61,6 @@ class Game():
         Copies the list starting at sb_index and wrapping around
         Increases the sb_index turn through decorator
         '''
-        indx =  self.sb_index
         self.players.append(self.players.pop(0)) # one at a time.
  
 
@@ -102,6 +81,28 @@ class Game():
         # @TODO persist to DB
         pass
 
+    def get_state(self)-> GameState:
+        pass
+
+    def initialize_game_state(self, board_stage: BoardStage)-> None:
+        '''
+        updates pot_state at the beginning of betting round passed.
+        '''
+        self.pot.initialize_pot_state(board_stage)
+
+    def initialize_players_state(self):
+        '''
+        takes care of updating player roles, and resetting their amount bet this hand to 0.
+        '''
+        self.players[0].set_role('sb')
+        self.players[1].set_role('bb')
+
+        for i, player in enumerate(self.players):
+            if i==0: player.set_role('sb')
+            elif i==1: player.set_role('bb')
+            else: player.set_role('other')
+            player.reset_amount_bet_this_hand()
+        
 
     async def betting_round(self, board_stage : BoardStage, session: ClientSession = None) -> None:  
         '''
@@ -112,6 +113,10 @@ class Game():
         active_players = len(self.players)
         players_to_call = active_players
         tasks = [] # asyncio.gather?
+        self.initialize_game_state(board_stage)
+        self.update_player_turns()  ## needs to go before initialize_players state
+        self.initialize_players_state()
+
         while players_to_call != 0:
             for turn_index, player in enumerate(self.players):
                 print(f"players to call : {players_to_call}")
@@ -120,12 +125,8 @@ class Game():
                 if players_to_call == 0:
                     break
                 if player.get_betting_status() == "active":
-                    
-
                     # NOW) the tailored pot state is sent to player with their respective call price. 
-                    
                     response : Optional[PlayerBetResponse] = await player.make_bet()  ## AWAITED?
-
                     # @TODO the issue is here! before persisting, we need to copy the pot state. Now get_state returns the copy
                     # NOW) persist betting record for player. 
                     self.persist_player_action(response, board_stage)
@@ -148,6 +149,24 @@ class Game():
         await asyncio.sleep(0.1)  ## might be necessary until we have the calls
         ## end function
 
+
+    async def play_hand(self):
+        # Initialize clean Deck and Board
+        self.clear_board()
+        for player in self.players:
+            self.deck.deal_cards(player)
+
+        for round in self.rounds:
+            self.board.set_round(round)
+            self.deck.deal_cards(self.board)
+
+            # 1) Show Board
+            self.board.show()  ## Once we have a frontend, this game logic will go there. 
+            # 2) Betting Round 
+
+            await self.betting_round(round) 
+            # Awaits player responses and uploads pot and player status. 
+            # This should update the pot and this should be made visible in real time. 
 
             
 

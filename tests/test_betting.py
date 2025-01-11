@@ -26,7 +26,7 @@ def get_player_actions(actions : list[tuple[str,int]]) -> List[PlayerBetResponse
 
 
 @pytest.mark.asyncio
-async def test_betting_round_1(session: ClientSession, monkeypatch, game_fix):
+async def test_betting_round_1(monkeypatch, game_fix):
     '''
     Situation: All players call
     Preflop stage, no checking allowed.
@@ -38,7 +38,7 @@ async def test_betting_round_1(session: ClientSession, monkeypatch, game_fix):
 
     test_mock = AsyncMock(side_effect=player_actions)
     monkeypatch.setattr(Player, "make_bet", test_mock)
-    await game_fix.betting_round(board_stage=round, session=session)   ## @TODO I'm thinking we will need asyncio.gather()
+    await game_fix.betting_round(board_stage=round)   ## @TODO I'm thinking we will need asyncio.gather()
     hand_history = game_fix.get_hand_history()['PREFLOP'] # This is the thing
 
 
@@ -86,10 +86,10 @@ async def test_betting_round_1(session: ClientSession, monkeypatch, game_fix):
 
 
 @pytest.mark.asyncio
-async def test_betting_round_2(monkeypatch, game_fix, session:ClientSession):
+async def test_betting_round_2(monkeypatch, game_fix):
     '''
     Preflop stage, no checking allowed.
-    Test single raise. Call amounts should update. 
+    Situation: single raise. Call amounts should update. 
     '''
     round = BoardStage.PREFLOP
     # Situation:
@@ -98,7 +98,7 @@ async def test_betting_round_2(monkeypatch, game_fix, session:ClientSession):
 
     test_mock = AsyncMock(side_effect=player_actions)
     monkeypatch.setattr(Player, "make_bet", test_mock)
-    await game_fix.betting_round(board_stage=round, session=session)
+    await game_fix.betting_round(board_stage=round)
     hand_history = game_fix.get_hand_history()['PREFLOP'] # This is the thing
 
     # pprint.pp(hand_history)
@@ -135,59 +135,65 @@ async def test_betting_round_2(monkeypatch, game_fix, session:ClientSession):
     })
 
 
+@pytest.mark.asyncio
+async def test_betting_round3(monkeypatch, game_fix):
+    '''
+    Situation: flop stage, check allowed, multiple raises. 
+    '''
+    # PREFLOP actions:
+    actions = [('call', 40), ('raise',80), ('call', 80), ('call', 40)]
+    test_mock = AsyncMock(side_effect=get_player_actions(actions))
+    monkeypatch.setattr(Player, "request_betting_response", test_mock)
+    await game_fix.betting_round(board_stage=BoardStage.PREFLOP)
 
-# def test_betting_round3(monkeypatch, pot_fix_flop):
-#     '''
-#     Tests flop stage, checking allowed.
-#     Test multiple raises. 
-#     '''
-#     initial_pot_state = {
-#         'call_amount': 0,
-#         'check_allowed' : True,
-#         'minimum_raise' : 100,
-#         'pot_size' : 1000
-#     }
-#     assert(pot_fix_flop.get_pot_state() == initial_pot_state)
-#     round = BoardStage.FLOP
-#     actions = [('check', 0), ('raise',100), ('raise', 200), ('call', 200), ('call', 100)]
-#     player_actions = get_player_actions(actions) # NEW
-#     test_mock = Mock(side_effect=player_actions)
-#     monkeypatch.setattr(Player, "make_bet", test_mock)
-#     pot_fix_flop.betting_round(round)
-#     hand_history = pot_fix_flop.get_hand_history()['FLOP']
-#     # pprint.pprint(hand_history)
 
-#     assert(len(hand_history)==5) # 5 moves total
-#     # These represent the state player i sees before performing his action !!!
+    # FLOP actions:
+    flop_initial_conditions = {
+      "call_amount" : 0,
+      "check_allowed" : True,
+      "minimum_raise" : 80,
+      "pot_size" : 240,
+    }
 
-#     # P1 sees this bellow and checks
-#     assert(hand_history[0]['player1']['pot_state'] == initial_pot_state)
-#     # P2 sees this bellow and raises 100
-#     # pprint.pprint(hand_history[1]['player2']['pot_state'])
-#     assert(hand_history[1]['player2']['pot_state'] == initial_pot_state)
-#     ## P3 sees this bellow and raises 200
-#     assert(hand_history[2]['player3']['pot_state'] == {
-#         'call_amount': 100,
-#         'check_allowed' : False,
-#         'minimum_raise' : 200,
-#         'pot_size' : 1100
-#     })
-#     ## P1 sees this bellow and calls 200
-#     assert(hand_history[3]['player1']['pot_state'] == {
-#       "call_amount" : 200,
-#       "check_allowed" : False,
-#       "minimum_raise" : 400,
-#       "pot_size" : 1300,
-#     })
-#     ## P2 Calls with 100
-#     assert(hand_history[4]['player2']['pot_state'] == {
-#       "call_amount" : 100,   
-#       ## P2 ONLY NEEDS TO 100 to call. @TODO important Call_amount changes per player!!!!
-#       ## This makes things tricky...
-#       "check_allowed" : False,
-#       "minimum_raise" : 400,
-#       "pot_size" : 1500,
-#     })
+    actions = [('check', 0), ('raise',100), ('raise', 200), ('call', 200), ('call', 100)]
+    test_mock = AsyncMock(side_effect=get_player_actions(actions))
+    monkeypatch.setattr(Player, "request_betting_response", test_mock) # NEW mocked method!!!!!
+    await game_fix.betting_round(BoardStage.FLOP)
+    hand_history = game_fix.get_hand_history()['FLOP']
+    # pprint.pprint(hand_history)
+
+    assert(len(hand_history)==5) # 5 moves total
+    # P1 sees this bellow and checks
+    assert(hand_history[0]['game_state']['pot'] == flop_initial_conditions)
+    # P2 sees this bellow and raises 100
+    # pprint.pprint(hand_history[1]['player2']['pot_state'])
+    assert(hand_history[1]['game_state']['pot'] == flop_initial_conditions)
+
+
+    ## P3 sees this bellow and raises 200
+    assert(hand_history[2]['game_state']['pot'] == {
+        'call_amount': 100,
+        'check_allowed' : False,
+        'minimum_raise' : 200,
+        'pot_size' : 340
+    })
+
+    ## P1 sees this bellow and calls 200
+    assert(hand_history[3]['game_state']['pot'] == {
+      "call_amount" : 200,
+      "check_allowed" : False,
+      "minimum_raise" : 400,
+      "pot_size" : 540,
+    })
+    ## P2 Calls with 100
+    assert(hand_history[4]['game_state']['pot'] == {
+      "call_amount" : 100,   
+      ## P2 ONLY NEEDS TO 100 to call. @TODO important Call_amount changes per player!!!!
+      ## This makes things tricky... need to personalize pot state to players somehow 
+      "check_allowed" : False,
+      "minimum_raise" : 400,
+      "pot_size" : 740,
+    })
 
 
 
