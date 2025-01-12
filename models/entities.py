@@ -37,11 +37,13 @@ class Entity(BaseModel, ABC):
 
 
 class Player(Entity):
+
     pid : int
     funds : int
-    role : PlayerRole = "other"  # @TODO update them every round
     number_cards_dealt : int = 2
-    betting_status : PlayerStatus = "inactive"
+    role : PlayerRole = PlayerRole.OTHER  # @TODO update them every round
+    betting_status : PlayerStatus = PlayerStatus.INACTIVE
+
     hand : Tuple[Card, Card] = None
     amount_bet_this_hand : int = 0
 

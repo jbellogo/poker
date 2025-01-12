@@ -95,13 +95,14 @@ class Game():
         '''
         takes care of updating player roles, and resetting their amount bet this hand to 0.
         '''
-        self.players[0].set_role('sb')
-        self.players[1].set_role('bb')
 
         for i, player in enumerate(self.players):
-            if i==0: player.set_role('sb')
-            elif i==1: player.set_role('bb')
-            else: player.set_role('other')
+            if i == 0: 
+                self.players[i].set_role(PlayerRole.SMALL_BLIND)
+            elif i==1: 
+                self.players[i].set_role(PlayerRole.BIG_BLIND)
+            else: 
+                self.players[i].set_role(PlayerRole.OTHER)
             player.reset_amount_bet_this_hand()
 
 
@@ -119,13 +120,9 @@ class Game():
         Awaits active player actions
         Updates player status from action response, ie all-in, folded, etc.
         '''
-        active_players = len(self.players)
-        tasks = [] # asyncio.gather?
         self.initialize_game_state(board_stage)
-        self.update_player_turns()  ## needs to go before initialize_players state
         self.initialize_players_state()
-
-        # @TODO NOOOOW we are working with te
+        # @TODO NOOOOW we are working with folding
         while True:
             number_of_raises = 0
             for player in self.players:
@@ -133,7 +130,7 @@ class Game():
                 if player.get_betting_status() == "active":
                     # NOW) the tailored pot state is sent to player with their respective call price. 
                     state : GameState = self.get_personalized_state(player)
-                    print(f"calling await player.make_bet(), num raises={number_of_raises}")
+                    # print(f"calling await player.make_bet(), num raises={number_of_raises}")
                     response : Optional[PlayerBetResponse] = await player.make_bet(state)
 
                     # NOW) persist betting record for player. 
@@ -149,6 +146,8 @@ class Game():
 
 
         self.persist_betting_round()
+        self.update_player_turns()  ## needs to go before initialize_players state
+
         await asyncio.sleep(0.1)  ## might be necessary until we have the calls
         ## end function
 
