@@ -4,7 +4,6 @@ from unittest.mock import Mock, AsyncMock
 from typing import List# Tuple
 import pprint
 import asyncio
-from aiohttp import ClientSession
 
 
 
@@ -114,9 +113,6 @@ async def test_betting_round3(monkeypatch, game_fix):
     ## P2 Calls with 100
     assert(hand_history[4]['game_state']['pot'] == {"call_amount" : 100,   "check_allowed" : False,"minimum_raise" : 400,"pot_size" : 740})
 
-
-# # @TODO test validation of call amounts and minimum raises. 
-# # Test blind taxes in preflop round, they should not be able to fold
     
 @pytest.mark.asyncio
 async def test_betting_round4(monkeypatch, game_fix):
@@ -141,6 +137,20 @@ async def test_betting_round4(monkeypatch, game_fix):
     assert(hand_history[4]['game_state']['pot']=={'call_amount' : 120,'check_allowed' : False,'minimum_raise' : 320,'pot_size' : 280}) # P2 sees
 
 
+# # @TODO test validation of call amounts and minimum raises. 
+# # Test blind taxes in preflop round, they should not be able to fold
+# # Test all-in 
+
+@pytest.mark.asyncio
+async def test_betting_round_5(monkeypatch, game_fix):
+    '''
+    Situation: pre-flop stage, player goes all-in. 
+    '''
+    actions = [('P1','call',40), ('P2','call',40), ('P3','all-in',0), ('P1','',160), ('P2','call',120)] # P3 actually not allowed to check   
+    # with fold and call you should not have to specify, maybe we can worry about that in the frontend
+    test_mock = AsyncMock(side_effect=get_player_actions(actions))
+    monkeypatch.setattr(Player, "request_betting_response", test_mock)
+    await game_fix.betting_round(board_stage=BoardStage.PREFLOP)
 
 
 

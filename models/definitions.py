@@ -4,7 +4,11 @@ from enum import Enum, IntEnum
 from pydantic import BaseModel
 
 
-# Card definitions
+##############################################################################
+######### CARD DEFINITIONS
+##############################################################################
+
+
 class Suit(str, Enum):
     SPADES = "S"
     HEARTS = "H"
@@ -29,22 +33,23 @@ class Rank(IntEnum):
     JACK = 11
     QUEEN = 12
     KING = 13
-    ACE = 14   ## How to deal with this? just do it in the straight checks
+    ACE = 14   ## @TODO How to deal with the 2 possible values of ACE? just do it in the straight checks
 
     @classmethod
     def list(cls):
         return list(map(lambda c: c.value, cls))
     
-
-## BaseModel is only for these simple classes
 class Card(BaseModel):
     suit: Suit  
     rank: Rank  
 
     def __str__(self) -> str:
         return f"{self.rank}{self.suit}"
-
+    
+##############################################################################
 ######## BETTING
+##############################################################################
+
 class BoardStage(str, Enum):
     PREFLOP = 'PREFLOP'
     FLOP = 'FLOP'
@@ -69,8 +74,6 @@ class GameState(TypedDict):
     pot: PotState
     board: BoardState
 
-
-#
 class PlayerStatus(str, Enum):
     ACTIVE = 'active'
     INACTIVE = 'inactive' # will have 10 players created, corresponding to 10 reserved seats but they only become active when someone joins a session.
@@ -81,7 +84,6 @@ class PlayerRole(str, Enum):
     SMALL_BLIND = 'sb'
     BIG_BLIND = 'bb'
     OTHER = 'other'
-
 
 class PlayerAction(str, Enum):
     CALL = 'call'

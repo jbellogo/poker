@@ -141,7 +141,7 @@ class Game():
         while players_to_call != 0:
             if players_to_call == 0:
                 break
-            print("-----------STARTING LOOP-----------")
+            # print("-----------STARTING LOOP-----------")
             for player in self.active_players:
                 print(player)               
                 if player.get_betting_status() == "active":
@@ -173,7 +173,6 @@ class Game():
         self.update_player_turns()  ## needs to go before initialize_players state
 
         await asyncio.sleep(0.1)  ## might be necessary until we have the calls
-        ## end function
 
 
     async def play_hand(self):
