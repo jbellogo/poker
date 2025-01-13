@@ -7,6 +7,7 @@ from models.config import * # Global variables, better practice to use json.
 from models.pot import Pot
 from aiohttp import ClientSession
 import asyncio
+import copy
 
 
 
@@ -104,6 +105,8 @@ class Game():
             else: 
                 self.players[i].set_role(PlayerRole.OTHER)
             player.reset_amount_bet_this_hand()
+        self.active_players = copy.deepcopy(self.players)
+
 
 
     def get_personalized_state(self, player:Player) -> GameState:
@@ -111,6 +114,15 @@ class Game():
         pot['call_amount'] -= player.f_amount_bet_this_hand()
         board : BoardState = self.board.get_state()
         return GameState(pot= pot, board=board)
+
+    def update_active_players(self, player: Player, response_action : PlayerAction):
+        '''
+        updates player statuses based on response
+        but now we are mutating the thing we are iterating...
+        '''
+        if response_action in [PlayerAction.ALLIN, PlayerAction.FOLD]:
+            # How do we hide them from the list?
+            self.active_players.remove(player)
 
 
 
@@ -122,10 +134,15 @@ class Game():
         '''
         self.initialize_game_state(board_stage)
         self.initialize_players_state()
-        # @TODO NOOOOW we are working with folding
-        while True:
-            number_of_raises = 0
-            for player in self.players:
+
+        active_players :int = len(self.active_players)
+        players_to_call:int = active_players
+
+        while players_to_call != 0:
+            if players_to_call == 0:
+                break
+            print("-----------STARTING LOOP-----------")
+            for player in self.active_players:
                 print(player)               
                 if player.get_betting_status() == "active":
                     # NOW) the tailored pot state is sent to player with their respective call price. 
@@ -137,13 +154,20 @@ class Game():
                     self.persist_player_action(response, state)
                     # NOW) THEN WE UPDATE pot state with player response. this way we store the pot_state at the time before the player makes his move
                     self.pot.update_pot_state(player, response)
+                    # NOW) we need a function which updates the list of players if they have gone all-in or folded
+                    self.update_active_players(player, response['action']) 
 
-                    if  response['action'] == "raise":
-                        number_of_raises+=1  # each PLAYER CAN ONLY RAISE ONCE THOUGH @TODO implment this constraint. that's no-lmit and limit texas holdem
-                    # if response['action'] 
-            if number_of_raises == 0:
-                break
-
+                    player_action =  response['action']
+                    if  player_action == "raise":
+                        players_to_call = active_players-1 # all active players
+                    elif player_action == "fold":
+                        players_to_call-=1
+                        active_players-=1
+                    elif player_action == "call":
+                        players_to_call -=1
+                    elif player_action == "check":
+                        pass
+                        
 
         self.persist_betting_round()
         self.update_player_turns()  ## needs to go before initialize_players state

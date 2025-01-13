@@ -53,8 +53,8 @@ class Pot():
 
     
     def update_pot_state(self, last_active_player: Player, last_action : PlayerBetResponse) -> None:
-        print("LAST PLAYER ACTION: ")
-        print(last_action)
+        # print("LAST PLAYER ACTION: ")
+        # print(last_action)
         action : str = last_action['action']
         amount : int = last_action['amount_bet']
         self.pot_state['pot_size'] += amount

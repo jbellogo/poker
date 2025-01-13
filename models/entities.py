@@ -37,7 +37,6 @@ class Entity(BaseModel, ABC):
 
 
 class Player(Entity):
-
     pid : int
     funds : int
     number_cards_dealt : int = 2
