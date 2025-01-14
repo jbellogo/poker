@@ -160,6 +160,9 @@ class Game():
                     player_action =  response['action']
                     if  player_action == "raise":
                         players_to_call = active_players-1 # all active players
+                    elif player_action == "all-in":
+                        players_to_call = active_players-1
+                        active_players-=1
                     elif player_action == "fold":
                         players_to_call-=1
                         active_players-=1

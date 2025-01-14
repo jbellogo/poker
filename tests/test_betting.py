@@ -146,11 +146,18 @@ async def test_betting_round_5(monkeypatch, game_fix):
     '''
     Situation: pre-flop stage, player goes all-in. 
     '''
-    actions = [('P1','call',40), ('P2','call',40), ('P3','all-in',0), ('P1','',160), ('P2','call',120)] # P3 actually not allowed to check   
+    actions = [('P1','call',40), ('P2','call',40), ('P3','all-in',5000), ('P1','fold',0), ('P2','all-in',5000)] # P3 actually not allowed to check   
     # with fold and call you should not have to specify, maybe we can worry about that in the frontend
     test_mock = AsyncMock(side_effect=get_player_actions(actions))
     monkeypatch.setattr(Player, "request_betting_response", test_mock)
     await game_fix.betting_round(board_stage=BoardStage.PREFLOP)
+    hand_history = game_fix.get_hand_history()['PREFLOP']
+    pprint.pprint(hand_history)
+    assert(len(hand_history)==5)
+
+
+
+
 
 
 
