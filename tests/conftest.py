@@ -9,12 +9,13 @@ import asyncio
 from aiohttp import ClientSession
 import pytest_asyncio
 
-BIG_BLIND = 20
-INITIAL_PLAYER_FUNDS = 5000
+from models.config import * # Global variables, better practice to use json.
+
+
 
 @pytest.fixture
 def player_fix():
-    return Player(pid=0, funds=100)
+    return Player(pid=0, funds=INITIAL_PLAYER_FUNDS)
 
 @pytest.fixture
 def deck_fix():
@@ -28,11 +29,6 @@ def board_fix():
 def player_list_fix():
     return [Player(pid = i, funds=INITIAL_PLAYER_FUNDS, betting_status = "active") for i in range(1,4)]
 
-@pytest.fixture
-def pot_fix_preflop(player_list_fix):
-    '''For betting tests'''
-    pot = Pot(bb_amount = BIG_BLIND)
-    return pot
 
 # @pytest.fixture
 # def pot_fix_flop():
@@ -48,8 +44,6 @@ def pot_fix_preflop(player_list_fix):
 #     pot.overwrite_pot_state(new_pot_state)
 #     return pot
 
-FIX_NUM_PLAYERS =3
-FIX_SB_AMOUNT = 20
 
 @pytest.fixture
 def game_fix():

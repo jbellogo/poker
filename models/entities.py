@@ -94,7 +94,15 @@ class Player(Entity):
         ## 1**) send request to player's ip address, await resposne.
         ## this should already be validated as the pre_bet_state is betting constraints served to player. Cannot bet more than funds!
         response : PlayerBetResponse  = await self.request_betting_response() # pass to it a GameState and PlayerState
-
+        print(f"bet:{response['amount_bet']}, funds: {self.funds}")
+        assert(response['amount_bet'] <= self.funds)
+        # We want to keep the game logic on the backend, so we can determine the options avaliable here and send them to the frontend.
+        if(response['action'] == 'fold') or (response['action'] == 'check'):
+            assert(response['amount_bet']==0) 
+        if(response['action'] == 'all-in'):
+            assert(response['amount_bet']==self.funds)
+        if(response['action'] == 'call'):
+            assert(response['amount_bet']==game_state['pot']['call_amount'])            
 
         # response = PlayerBetResponse({
         #     "pid": self.pid,
@@ -105,10 +113,13 @@ class Player(Entity):
         #     "hand" : self.hand,
         # })
 
+        # Handle 
+
         # update local player records with response. 
         self.funds -= response['amount_bet']
         self.betting_status = PlayerAction(response['action']).to_status()  ## this one is iffy
         self.amount_bet_this_hand += response['amount_bet']
+
         return response
 
 

@@ -1,7 +1,13 @@
 
 
 # Game
-NUM_PLAYERS : int = 5
-INITIAL_PLAYER_FUNDS : int  = 100
+NUM_PLAYERS : int = 3
+INITIAL_PLAYER_FUNDS : int  = 5000
 SB_AMOUNT : int = 20
 BB_AMOUNT : int = 40
+
+
+FIX_NUM_PLAYERS =3
+FIX_SB_AMOUNT = 20
+
+
