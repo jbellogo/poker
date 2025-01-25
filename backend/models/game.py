@@ -5,7 +5,6 @@ from models.definitions import *
 import pprint
 from models.config import * # Global variables, better practice to use json.
 from models.pot import Pot
-from aiohttp import ClientSession
 import asyncio
 import copy
 
