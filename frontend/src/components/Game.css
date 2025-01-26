@@ -54,20 +54,27 @@ body {
 }
 
 
+/* Me, Active Player */
 
-.regular-player-container {
-    position: absolute;
+
+.active-player-container {
     display: flex;
     align-items: center;
+    text-align: center;
+    gap: 1rem;
+    padding: 1rem;
     background-color: #2a2a2a;
     border-radius: 12px;
-    padding: 8px 16px;
-    gap: 12px;
-    min-width: 250px;
-    height: 100px;
-}
+    
+    min-width: 300px;
+    height: 150px;
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translate(-50%, 20%);
+  }
 
-.active-player-info-container {
+  .active-player-info-container {
     top: 0;
     position: absolute;
     display: flex;
@@ -77,44 +84,8 @@ body {
     gap: 12px;
 }
 
-.active-player-container {
 
-    display: flex;
-    align-items: center;
-    text-align: center;
-    gap: 1rem;
-    padding: 1rem;
-    background-color: #2a2a2a;
-    border-radius: 12px;
-    min-width: 250px;
-    height: 150px;
-    position: absolute;  /* Add this line */
-    bottom: 0;
-    left: 50%;
-    transform: translate(-50%, 20%);
-  }
-
-  
-  .player-cards {
-    display: flex;
-    gap: 0.5rem;
-  }
-  
-  .player-card {
-    height: 80px; /* Adjust this value to match your desired card height */
-    width: auto;
-    object-fit: contain;
-    transition: transform 0.2s;
-  }
-  
-  .player-card:hover {
-    transform: translateY(-10px);
-    cursor: pointer;
-  }
-/* Me */
-
-
-.active-player-action-container {
+  .active-player-action-container {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -124,8 +95,26 @@ body {
     bottom: 0;
 }
 
-.player-action-button {
-    padding: 8px 16px;
+
+  .player-cards {
+    display: flex;
+    gap: 0.75rem;
+  }
+  
+  .player-card {
+    height: 80px;
+    width: auto;
+    object-fit: contain;
+    transition: transform 0.2s;
+  }
+  
+  .player-card:hover {
+    transform: translateY(-10px);
+    cursor: pointer;
+  }
+
+  .player-action-button {
+    padding: 10px 18px;  /* Increased from 8px 16px */
     margin: 0 5px;
     border-radius: 4px;
     border: none;
@@ -147,32 +136,52 @@ body {
     margin-right: 0;
 }
 
-/* End of Player Action */
+/* End of Active Player */
 
 
+
+/* Regular Players */
+
+.regular-player-container {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    background-color: #322f2f;
+    border-radius: 12px;
+    padding: 8px 16px;
+    gap: 12px;
+    min-width: 250px;
+    height: 100px;
+}
+
+/* top right */
 .regular-player-container:nth-child(1) {
     top: 20%;
-    right: 0;
-    transform: translate(-20%, 20%);
+    right: 5%;
+    transform: translate(0, 0);
 }
 
+/* top left */
 .regular-player-container:nth-child(2) {
-    bottom: 0;
-    right: 0;
-    transform: translate(-20%, -20%);
-}
-
-.regular-player-container:nth-child(3) {
-    bottom: 0;
-    left: 0;
-    transform: translate(20%, -20%);
-}
-
-.regular-player-container:nth-child(4) {
     top: 20%;
-    bottom: 0;
-    transform: translate(20%, 20%);
+    left: 5%;
+    transform: translate(0, 0);
 }
+
+/* bottom right */
+.regular-player-container:nth-child(3) {
+    bottom: 10%;
+    right: 5%;
+    transform: translate(0, 0);
+}
+
+/* bottom left */
+.regular-player-container:nth-child(4) {
+    bottom: 10%;
+    left: 5%;
+    transform: translate(0, 0);
+}
+
 
 .player-image {
     width: 100px;
