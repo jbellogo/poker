@@ -13,7 +13,7 @@ import copy
 class Game():
     # Input
 
-    def __init__(self, num_players : int, sb_amount:int):
+    def __init__(self, num_players : int = 0, sb_amount:int = 50):
         self.num_players = num_players
 
         # variables
@@ -173,7 +173,6 @@ class Game():
 
         self.persist_betting_round()
         self.update_player_turns()  ## needs to go before initialize_players state
-
         await asyncio.sleep(0.1)  ## might be necessary until we have the calls
 
 
@@ -194,6 +193,10 @@ class Game():
             await self.betting_round(round) 
             # Awaits player responses and uploads pot and player status. 
             # This should update the pot and this should be made visible in real time. 
+
+    async def start(self, server):
+        while True:
+            ## 1) Wait for players to join server
 
             
 
