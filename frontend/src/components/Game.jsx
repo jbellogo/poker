@@ -1,53 +1,82 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './Game.css';
 import { ActivePlayer, RegularPlayer } from './player';
 import SocketIOClient from './Client';
 
-
 // When you open the page, you see the welcome-screen. When you click, "join game", you see the game-screen.
 
 
-// Where do I put this?
-const client = new SocketIOClient();
+// @TODO Eventually will rename this to MultiplePlayerGame to differentiate from SinglePlayerGame agains the AI.
+const Game = (props) => {
+    const [connectionError, setConnectionError] = useState(false);
+    const [players, setPlayers] = useState([]);
+    const [gameState, setGameState] = useState(null);
+    
+    // Define callbacks using useCallback to maintain reference stability
+    const handleConnectionError = useCallback((error) => {
+        setConnectionError(error);    
+    }, []);
 
-const sendMessage = () => {
-    client.sendMessage('message', { type: 'test_message', content: 'Hello Server!' });
-}
+    const handlePlayerJoined = useCallback((payload) => {
+        setPlayers(prevPlayers => [...prevPlayers, payload]);
+    }, []);
 
-const playerJoin = () => {
-    client.sendMessage('player_join', { type: 'player_join', content: {name: "Me", id: 1, funds: 1000} });
-}
+    const handleGameState = useCallback((payload) => {
+        setGameState(payload);
+    }, []);
+
+    const handlePlayerLeft = useCallback((payload) => {
+        setPlayers(prevPlayers => 
+            prevPlayers.filter(player => player.id !== payload.id)
+        );
+    }, []);
+
+    // Initialize socket client with callbacks
+    useEffect(() => {
+        const socketClient = new SocketIOClient(
+            'http://localhost:8765',
+            props.userName,
+            {
+                onPlayerJoined: handlePlayerJoined,
+                onGameState: handleGameState,
+                onPlayerLeft: handlePlayerLeft,
+                onConnectionError: handleConnectionError
+            }
+        );
+
+        // Cleanup on unmount
+        return () => {
+            socketClient.close();
+        };
+    }, [handlePlayerJoined, handleGameState, handlePlayerLeft, handleConnectionError, props.userName]);
 
 
-const Game = () => {
-    // Should I put this in the App component directly?
-    const [showGame, setShowGame] = useState(false);  // Add this state
 
-    // Add this handler function
-    const handleGameStart = () => {
-        setShowGame(true);
-        playerJoin();  // Assuming you want to call this when joining
-    };
 
+    // This is the main render function.
     return (
-        <div>
-            <h1 className='title'>Online Poker</h1>
-            {!showGame ? (
-                <Welcome onGameStart={handleGameStart} />
-            ) : (
-                // ... existing game container code ...
-                <div className="game-container">
-                    <div className="table-container">
-                        <RegularPlayer name="John Cena" id={2} funds={1000} bet={100} action="CALL" />
-                        <RegularPlayer name="Tony Romo" id={3} funds={1000} bet={100} action="CALL" />
-                        <RegularPlayer name="Lila" id={4} funds={1000} bet={0} action="FOLD" />
-                        <RegularPlayer name="Maria" id={5} funds={1000} bet={100} action="CALL" />
-                        <ActivePlayer name="Me" id={1} funds={1000} bet={100} action="CALL" />
-                    </div>
+        <>
+            {/* // We can add some conditional rendering here to handle the connection error. */}
+
+        {connectionError ? (
+            <div className="error-container">
+                <h2>Connection Error</h2>
+                <p>Unable to connect to the game server. Please try again later.</p>
+            </div>
+        ) : (
+            <div className="game-container">
+                <div className="table-container">
+                    {/* @TODO: we will only be using the GameState message to render all this */}
+                    <RegularPlayer name="John Cena" id={2} funds={1000} bet={100} action="CALL" />
+                    <RegularPlayer name="Tony Romo" id={3} funds={1000} bet={100} action="CALL" />
+                    <RegularPlayer name="Lila" id={4} funds={1000} bet={0} action="FOLD" />
+                    <RegularPlayer name="Maria" id={5} funds={1000} bet={100} action="CALL" />
+                    <ActivePlayer name={props.playerName} id={1} funds={1000} bet={100} action="CALL" />
                 </div>
-            )}
-        </div>
-    );
-};
+            </div>
+        )}
+    </>
+    )
+}
 
 export default Game;
