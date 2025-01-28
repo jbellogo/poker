@@ -1,4 +1,7 @@
+// Websocket client.
+
 import { io } from 'socket.io-client';
+
 
 class SocketIOClient {
     constructor(url = 'http://localhost:8765', userName, callbacks={}) {

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import './Game.css';
-import { ActivePlayer, RegularPlayer } from './player';
-import SocketIOClient from './Client';
+import '../styles/Game.css';
+import Hero from './Hero';
+import Opponent from './Opponent';
+import SocketIOClient from '../services/Client';
 
 // When you open the page, you see the welcome-screen. When you click, "join game", you see the game-screen.
 
@@ -53,27 +54,27 @@ const Game = (props) => {
     }, [handlePlayerJoined, handleGameState, handlePlayerLeft, handleConnectionError, props.userName]);
 
 
-
-
     // This is the main render function.
     return (
         <>
             {/* // We can add some conditional rendering here to handle the connection error. */}
 
         {connectionError ? (
+            // make this into a component for readability.
             <div className="error-container">
                 <h2>Connection Error</h2>
                 <p>Unable to connect to the game server. Please try again later.</p>
             </div>
         ) : (
+            // make this into a component for readability.
             <div className="game-container">
                 <div className="table-container">
                     {/* @TODO: we will only be using the GameState message to render all this */}
-                    <RegularPlayer name="John Cena" id={2} funds={1000} bet={100} action="CALL" />
-                    <RegularPlayer name="Tony Romo" id={3} funds={1000} bet={100} action="CALL" />
-                    <RegularPlayer name="Lila" id={4} funds={1000} bet={0} action="FOLD" />
-                    <RegularPlayer name="Maria" id={5} funds={1000} bet={100} action="CALL" />
-                    <ActivePlayer name={props.playerName} id={1} funds={1000} bet={100} action="CALL" />
+                    {/* <Opponent name="John Cena" id={2} funds={1000} bet={100} action="CALL" />
+                    <Opponent name="Tony Romo" id={3} funds={1000} bet={100} action="CALL" />
+                    <Opponent name="Lila" id={4} funds={1000} bet={0} action="FOLD" />
+                    <Opponent name="Maria" id={5} funds={1000} bet={100} action="CALL" /> */}
+                    <Hero name="John Cena" id={1} funds={1000} bet={100} action="CALL" />
                 </div>
             </div>
         )}

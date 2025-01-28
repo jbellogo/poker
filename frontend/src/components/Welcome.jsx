@@ -1,4 +1,4 @@
-import './Welcome.css';
+import '../styles/Welcome.css';
 import { useState } from 'react';
 
 
