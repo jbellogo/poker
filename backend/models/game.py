@@ -35,6 +35,9 @@ class Game():
             self.sb_index %= self.num_players
             return method(self, *args, **kw)
         return wrapper
+    
+    def add_player(self, sid: str, player_name: str):
+        self.players.append(Player(pid = len(self.players)+1, sid = sid, funds = INITIAL_PLAYER_FUNDS, betting_status = "active", name = player_name))
 
     def clear_board(self):
         self.deck : Deck = Deck()
@@ -125,7 +128,7 @@ class Game():
 
 
 
-    async def betting_round(self, board_stage : BoardStage, session: ClientSession = None) -> None:  
+    async def betting_round(self, board_stage : BoardStage) -> None:  
         '''
         Single betting round ie preflop or flop or etc. 
         Awaits active player actions
@@ -195,7 +198,8 @@ class Game():
             # This should update the pot and this should be made visible in real time. 
 
     async def start(self, server):
-        while True:
+        # while True:
+        pass
             ## 1) Wait for players to join server
 
             

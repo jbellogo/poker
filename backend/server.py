@@ -22,9 +22,17 @@ class WebsocketServer:
         self.game = Game()
 
     def connect(self, sid, environ):
-        """Handle client connection"""
+        # sid: session_id
+        """
+        Handle client connection
+        Whats the first thing that should happen when a client connects? 
+        they should send their name
+        ws://localhost:8765/connect
+
+        
+        """
         print(f"Client connected: {sid}")
-        self.connected_clients.add(sid)
+        self.connected_clients.add(sid) ## Player logic is handled once they connect.
 
     def disconnect(self, sid):
         """Handle client disconnection"""

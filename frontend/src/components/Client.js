@@ -60,7 +60,7 @@ class SocketIOClient {
             'connect_failed': (error) => console.error('Socket.IO connection failed:', error)
         };
 
-        // Register all event handlers just to log them for development.
+        // Register all event handlers. Super important for setting up the callbacks.
         Object.entries(eventHandlers).forEach(([event, handler]) => {
             this.socket.on(event, handler);
         });

@@ -9,12 +9,14 @@ import SocketIOClient from './Client';
 // @TODO Eventually will rename this to MultiplePlayerGame to differentiate from SinglePlayerGame agains the AI.
 const Game = (props) => {
     const [connectionError, setConnectionError] = useState(false);
-    const [players, setPlayers] = useState([]);
-    const [gameState, setGameState] = useState(null);
-    
+    const [players, setPlayers] = useState([]); // Use this. Contains other players public information.
+    const [thisPlayer, setThisPlayer] = useState(null); // Use this. Contains the this players public and private information.
+    const [board, setBoard] = useState([]); 
+    // need to draw out the schemas, gamestate in python already has list of player and many more things.
+
     // Define callbacks using useCallback to maintain reference stability
     const handleConnectionError = useCallback((error) => {
-        setConnectionError(error);    
+        setConnectionError(true);    
     }, []);
 
     const handlePlayerJoined = useCallback((payload) => {

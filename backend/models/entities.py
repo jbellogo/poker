@@ -38,6 +38,7 @@ class Entity(BaseModel, ABC):
 
 class Player(Entity):
     pid : int
+    sid : str
     funds : int
     number_cards_dealt : int = 2
     role : PlayerRole = PlayerRole.OTHER  # @TODO update them every round
