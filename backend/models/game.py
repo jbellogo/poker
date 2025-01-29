@@ -11,47 +11,40 @@ import copy
 
 
 class Game():
-    # Input
-
-    def __init__(self, num_players : int = 0, sb_amount:int = 50):
-        self.num_players = num_players
-
+    def __init__(self, sio, max_players : int = MAX_PLAYERS, sb_amount : int = SB_AMOUNT, initial_player_funds : int = INITIAL_PLAYER_FUNDS):
+        self.sio = sio # socketio server
+        self.max_players = max_players
+        self.sb_amount = sb_amount
+        self.initial_player_funds = initial_player_funds
         # variables
         self.rounds  : List[BoardStage] = [BoardStage.PREFLOP, BoardStage.FLOP, BoardStage.TURN, BoardStage.RIVER]
-        self.players : List[Player] = [Player(pid = i, funds = INITIAL_PLAYER_FUNDS, betting_status = "active") for i in range(1, num_players+1)]
-
+        self.players : List[Player] = []
         self.pot : Pot = Pot(sb_amount=sb_amount)
         self.sb_index : int = 0
-        self.deck : Deck =  Deck()  ## Hmmm don't know how I feel about this
+        self.deck : Deck =  Deck()
         self.board : Board = Board()
+        # For persistence
         self.hand_history : Dict[str, List[BettingRoundRecord]] = {"PREFLOP": [], "FLOP":[], "TURN":[], "RIVER":[]} 
 
 
-    # model_config = ConfigDict(arbitrary_types_allowed=True) # very important to circumvent thorough validation of created types.
     def next_sb_turn(method):
         '''decorator, increases modular count for small_blin index, corresponding to next turn.'''
         def wrapper(self, *args, **kw):
             self.sb_index += 1
-            self.sb_index %= self.num_players
+            self.sb_index %= len(self.players)
             return method(self, *args, **kw)
         return wrapper
     
     def add_player(self, sid: str, player_name: str):
-        self.players.append(Player(pid = len(self.players)+1, sid = sid, funds = INITIAL_PLAYER_FUNDS, betting_status = "active", name = player_name))
+        self.players.append(Player(pid = len(self.players)+1, 
+                                   sid = sid, 
+                                   funds = self.initial_player_funds, 
+                                   betting_status = "active", 
+                                   name = player_name))
 
     def clear_board(self):
         self.deck : Deck = Deck()
         self.board : Board = Board()
-
-
-    def get_players(self) -> List[int]:
-        '''
-        Returns a list of PIDs to simplify tests
-        '''
-        return [player.get_id() for player in self.players]
-    
-    def get_sb_index(self) -> int:
-        return self.sb_index
 
 
     @next_sb_turn
@@ -75,13 +68,24 @@ class Game():
 
     #     self.persist_player_action(response, game_state)
 
+    def remove_player(self, sid: str) -> None:
+        self.players = [player for player in self.players if player.sid != sid]
+
+    def get_players(self) -> List[int]:
+        '''
+        Returns a list of PIDs to simplify tests
+        '''
+        return [player.get_id() for player in self.players]
+    
+    def get_sb_index(self) -> int:
+        return self.sb_index
+
 
     def get_hand_history(self):
         return self.hand_history
 
     def persist_betting_round(self):
-        '''Save self.hand_history somewhere'''
-        # @TODO persist to DB
+        '''Save to db... coming soon'''
         pass
 
     def get_state(self)-> GameState:
@@ -110,7 +114,6 @@ class Game():
         self.active_players = copy.deepcopy(self.players)
 
 
-
     def get_personalized_state(self, player:Player) -> GameState:
         pot : PotState = self.pot.get_state() # this returns a copy, perfect for us
         pot['call_amount'] -= player.f_amount_bet_this_hand()
@@ -125,7 +128,6 @@ class Game():
         if response_action in [PlayerAction.ALLIN, PlayerAction.FOLD]:
             # How do we hide them from the list?
             self.active_players.remove(player)
-
 
 
     async def betting_round(self, board_stage : BoardStage) -> None:  
@@ -202,7 +204,25 @@ class Game():
         pass
             ## 1) Wait for players to join server
 
-            
+    def get_player_state(self, sid):
+        for player in self.players:
+            if player.get_sid() == sid:
+                return player.get_state()
+
+
+    def handle_player_action(self, sid, data):
+        print(f"handling action from {sid}: {data}")
+        type = data['type']
+        if type == 'player_join_request':
+            print(f"len(self.players)+1: {len(self.players)+1}")
+            print(f"MAX_PLAYERS: {MAX_PLAYERS}")
+            if len(self.players)+1 < MAX_PLAYERS:
+                self.add_player(sid, data['name'])
+                self.sio.emit('message', {"type": "player_join_success", 'data' : self.get_player_state(sid)}, to=sid)
+            else:
+                self.sio.emit('message', {"type": "player_join_failure", "message": "Game is full"}, to=sid)
+                self.sio.disconnect(sid)
+        
 
 
 

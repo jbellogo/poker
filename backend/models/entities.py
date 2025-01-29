@@ -6,11 +6,8 @@ from pydantic import BaseModel
 from models.definitions import *
 from typing import List, Union, Literal, Tuple, Optional
 import random
-from enum import IntEnum
-from uuid import UUID
 from abc import ABC, abstractmethod
 import asyncio
-from aiohttp import ClientSession
 
 ###  
 ### Entities are Card owners.
@@ -35,23 +32,27 @@ class Entity(BaseModel, ABC):
     def _cards_dealt(self) -> int:
         pass
 
-
 class Player(Entity):
-    pid : int
+    # public info
+    pid : int # Only keeping for consistent color coding. 
     sid : str
     funds : int
-    number_cards_dealt : int = 2
     role : PlayerRole = PlayerRole.OTHER  # @TODO update them every round
-    betting_status : PlayerStatus = PlayerStatus.INACTIVE
+    betting_status : PlayerStatus = PlayerStatus.INACTIVE 
 
-    hand : Tuple[Card, Card] = None
-    amount_bet_this_hand : int = 0
+    # private info
+    hand : List[Card] = [] # no need for tuple since this is all internal
+
+    # supporting info
+    _amount_bet_this_hand : int = 0
+    _number_cards_dealt : int = 2
+
 
     def __str__(self):
         return self.model_dump_json()
 
     def _cards_dealt(self) -> int:
-        return self.number_cards_dealt
+        return self._number_cards_dealt
     
     def get_betting_status(self):
         return self.betting_status
@@ -61,23 +62,41 @@ class Player(Entity):
     
     def get_id(self) -> int:
         return self.pid
+    
+    def get_sid(self) -> str:
+        return self.sid
+    
 
     def set_status(self, new_status : Literal["active", "fold", "all-in", "inactive"]):
         self.betting_status = new_status
     
     def f_amount_bet_this_hand(self):
-        return self.amount_bet_this_hand
+        return self._amount_bet_this_hand
     
     def reset_amount_bet_this_hand(self):
-        self.amount_bet_this_hand = 0
-    
-    # def add_amount_bet_this_hand(self, amount:int):
-    #     ''' this is only used for testing'''
-    #     self.current_hand_amount_bet+=amount
+        self._amount_bet_this_hand = 0
 
+    def get_state(self):
+        # you can make this into a TypedDict if you want. 
+        return {
+            "public_info": {
+                "sid": self.sid,
+                "pid": self.pid,
+                "funds": self.funds,
+                "role": str(self.role),
+                "betting_status": str(self.betting_status),  ## Will this automatically convert to string?
+            },
+            "private_info": {
+                "hand": self.hand
+            }
+        }
+        
+    
 
     async def request_betting_response(self) -> Optional[PlayerBetResponse]:
-        '''Actual API call'''
+        '''
+        Actual API call. Its a wrapper to monkeypatch its response
+          and still use make_bet to update local player fields.'''
         await asyncio.sleep(1)
         return None
 
@@ -118,7 +137,7 @@ class Player(Entity):
         # update local player records with response. 
         self.funds -= response['amount_bet']
         self.betting_status = PlayerAction(response['action']).to_status()  ## this one is iffy
-        self.amount_bet_this_hand += response['amount_bet']
+        self._amount_bet_this_hand += response['amount_bet']
 
         return response
 

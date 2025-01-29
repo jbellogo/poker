@@ -1,17 +1,43 @@
 import socketio
 import eventlet
+import json
 from models import Game
 
 ## The Server will own a Game object. It will pass messages to the game object to handle.
+'''
+This is how I want to store player info.
+This is player state. 
+{sid1: {
+    "public_info": {
+        "pid": int,
+        "sid": str,
+        "funds": int,
+        "role": PlayerRole,
+        "betting_status": PlayerStatus,
+    },
+    "private_info": {
+        "hand": Tuple[Card, Card],
+    }
+},
+}
+
+{type:‘player_join_request’,  name:”John Cena”}
+'''
+
+
+
 
 class WebsocketServer:
     def __init__(self, port=8765, host='localhost'):
+        
         # Create Socket.IO server
         self.sio = socketio.Server(cors_allowed_origins='*')
         self.app = socketio.WSGIApp(self.sio)
         self.port = port
         self.host = host
-        self.connected_clients = set()
+        self.connected_clients = set() 
+        ## Set of uuids, can lookup player state through game object since, 
+        # for better separation of cencerns, game object will own the full player state.
         
         # Register event handlers
         self.sio.on('connect', self.connect)
@@ -19,7 +45,7 @@ class WebsocketServer:
         self.sio.on('message', self.message)
 
         # Game specific handlers
-        self.game = Game()
+        self.game = Game(sio=self.sio)
 
     def connect(self, sid, environ):
         # sid: session_id
@@ -28,31 +54,22 @@ class WebsocketServer:
         Whats the first thing that should happen when a client connects? 
         they should send their name
         ws://localhost:8765/connect
-
-        
         """
         print(f"Client connected: {sid}")
         self.connected_clients.add(sid) ## Player logic is handled once they connect.
+
 
     def disconnect(self, sid):
         """Handle client disconnection"""
         print(f"Client disconnected: {sid}")
         self.connected_clients.remove(sid)
+        self.game.remove_player(sid) # Important to keep avaliable spots updated.
 
     def message(self, sid, data):
         """Handle incoming messages"""
         try:
-            # Process message and create response
-            response = {
-                "status": "success",
-                "message": f"Received: {data}"
-            }
-            # Send response back to client
-            self.sio.emit('message', response, to=sid)
-            print(f"received message from {sid}: {data}")
-            # Optionally broadcast to all other clients
-            # self.sio.emit('message', response, skip_sid=sid)
-            
+            print(f"received message from {sid}: {data}", flush=True)  # Force flush
+            self.game.handle_player_action(sid, data)
         except Exception as e:
             error_response = {
                 "status": "error",
