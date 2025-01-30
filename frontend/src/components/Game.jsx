@@ -20,9 +20,14 @@ const Game = (props) => {
         setConnectionError(true);    
     }, []);
 
-    const handlePlayerJoined = useCallback((payload) => {
-        setPlayers(prevPlayers => [...prevPlayers, payload]);
-    }, []);
+    const handlePlayerJoined = useCallback((data) => {
+        console.log("handlePlayerJoined", data);
+        setPlayers(prevPlayers => [...prevPlayers, data.public_info]);
+        setThisPlayer({
+            ...data.public_info,
+            cards: data.private_info.cards
+        });
+        }, []);
 
     const handleGameState = useCallback((payload) => {
         setGameState(payload);
@@ -69,12 +74,30 @@ const Game = (props) => {
             // make this into a component for readability.
             <div className="game-container">
                 <div className="table-container">
-                    {/* @TODO: we will only be using the GameState message to render all this */}
-                    {/* <Opponent name="John Cena" id={2} funds={1000} bet={100} action="CALL" />
-                    <Opponent name="Tony Romo" id={3} funds={1000} bet={100} action="CALL" />
-                    <Opponent name="Lila" id={4} funds={1000} bet={0} action="FOLD" />
-                    <Opponent name="Maria" id={5} funds={1000} bet={100} action="CALL" /> */}
-                    <Hero name="John Cena" id={1} funds={1000} bet={100} action="CALL" />
+                    {/* @TODO: we will only be using the GameState message to render all this */} 
+                    {players.map(player => (
+                            player.id !== thisPlayer?.id && (
+                                <Opponent
+                                    key={player.id}
+                                    name={player.name}
+                                    id={player.id}
+                                    funds={player.funds}
+                                    bet={player.bet}
+                                    action={player.action}
+                                />
+                            )
+                        ))}
+                        {/* Render Hero component for the current player */}
+                        {console.log("thisPlayer", thisPlayer)}
+                        {thisPlayer && (
+                            <Hero
+                                name={thisPlayer.name}
+                                id={thisPlayer.id}
+                                funds={thisPlayer.funds}
+                                bet={thisPlayer.bet}
+                                action={thisPlayer.action}
+                            />
+                        )}
                 </div>
             </div>
         )}

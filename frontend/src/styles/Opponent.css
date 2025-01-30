@@ -1,16 +1,19 @@
 /* Secondary Players. Your oponents. Their private information is not shown. */
 
 .opponent-container {
-    position: absolute;
     display: flex;
-    align-items: center;
-    text-align: left;
-    background-color: #322f2f;
-    border-radius: 12px;
-    padding: 8px 16px;
-    gap: 12px;
-    min-width: 250px;
-    height: 100px;
+    background-color: #2a2a2a;
+    justify-content: space-between;
+    height: 10vh;
+    width: 12vw; /* View port width */
+    padding: 2vh;
+    border-radius: 5%;
+    overflow: hidden;  /* Add this */
+    gap: 1vh;
+    border: 1vh solid black;
+  
+    /* Table Positioning */
+    position: fixed;
 }
 
 /* top right */

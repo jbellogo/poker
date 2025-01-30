@@ -15,20 +15,19 @@ function App() {
     };
   
 // @TEMPORARY for testing
-  return (<Game name="John Cena" />)
 
 
-  // return (
-  //   <>
-  //     {!showGame ? (
-  //       <Welcome onGameStart={handleGameStart} />
-  //     ) : (
-  //       <div>
-  //         <Game playerName={playerName}/>
-  //       </div>
-  //     )}
-  //   </>
-  // );
+  return (
+    <>
+      {!showGame ? (
+        <Welcome onGameStart={handleGameStart} />
+      ) : (
+        <div>
+          <Game userName={playerName}/>
+        </div>
+      )}
+    </>
+  );
 }
 
 export default App
