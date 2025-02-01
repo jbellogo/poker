@@ -8,10 +8,9 @@ class SocketIOClient {
         this.url = url;
         this.socket = null;
         this.callbacks = {
-            onPlayerJoined: callbacks.onPlayerJoined || (() => {}),
-            onGameState: callbacks.onGameState || (() => {}),
-            onPlayerLeft: callbacks.onPlayerLeft || (() => {}),
-            onConnectionError: callbacks.onConnectionError || (() => {})
+            onHeroJoined: callbacks.onHeroJoined || (() => {}),
+            onOpponentJoined: callbacks.onOpponentJoined || (() => {}),
+            onConnectionError: callbacks.onConnectionError || (() => {}),
         };
         this.connect(userName);
     }
@@ -27,20 +26,19 @@ class SocketIOClient {
 
     handleMessage(data) {
         console.log('Received message:', data);
-        // Handle different message types using callbacks.
-        // Callback means that we define the function now in Game.jsx but don't call it until a message is received on SocketIOClient.
-        switch (data.type) {
-            case 'player_join_success':
-                this.callbacks.onPlayerJoined(data.data);
-                break;
-            case 'game_state':
-                this.callbacks.onGameState(data.data);
-                break;
-            case 'player_left':
-                this.callbacks.onPlayerLeft(data.data);
-                break;
-            default:
-                console.log('Unknown message type:', data.type);
+        if (data != null) {
+            // Handle different message types using callbacks.
+            // Callback means that we define the function now in Game.jsx but don't call it until a message is received on SocketIOClient.
+            switch (data.type) {
+                case 'hero_join_success':
+                    this.callbacks.onHeroJoined(data.data);
+                    break;
+                case 'new_player_join':
+                    this.callbacks.onOpponentJoined(data.players);
+                    break;
+                default:
+                    console.log('Unknown message type:', data.type);
+            }
         }
     }
 
@@ -52,14 +50,15 @@ class SocketIOClient {
             .on('connect', () => {
                 console.log('Connected to Socket.IO server');
                 console.log('Sending player join request to server');
-                this.sendMessage({ type: 'player_join_request', name: userName });
+                this.sendMessage({ type: 'hero_join_request', name: userName });
             })
             .on('message', (data) => {
                 console.log('Received message');
                 this.handleMessage(data);
             })
-            .on('disconnect', (data) => {
-                console.log('Disconnected from Socket.IO server');
+            .on('disconnect', (error) => {
+                console.log('Disconnected from Socket.IO server', error);
+                this.callbacks.onConnectionError(error);
             })
             .on('connect_error', (error) => {
                 console.error('Socket.IO connection error:', error);

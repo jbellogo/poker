@@ -11,59 +11,47 @@ import SocketIOClient from '../services/Client';
 const Game = (props) => {
     const [connectionError, setConnectionError] = useState(false);
     const [players, setPlayers] = useState([]); // Use this. Contains other players public information.
-    const [thisPlayer, setThisPlayer] = useState(null); // Use this. Contains the this players public and private information.
+    const [hero, setHero] = useState(null); // Use this. Contains the this players public and private information.
     const [board, setBoard] = useState([]); 
-    // need to draw out the schemas, gamestate in python already has list of player and many more things.
-
-    // Define callbacks using useCallback to maintain reference stability
-    const handleConnectionError = useCallback((error) => {
-        setConnectionError(true);    
-    }, []);
-
-    const handlePlayerJoined = useCallback((data) => {
-        console.log("handlePlayerJoined", data);
-        setPlayers(prevPlayers => [...prevPlayers, data.public_info]);
-        setThisPlayer({
-            ...data.public_info,
-            cards: data.private_info.cards
-        });
-        }, []);
-
-    const handleGameState = useCallback((payload) => {
-        setGameState(payload);
-    }, []);
-
-    const handlePlayerLeft = useCallback((payload) => {
-        setPlayers(prevPlayers => 
-            prevPlayers.filter(player => player.id !== payload.id)
-        );
-    }, []);
-
-    // Initialize socket client with callbacks
+    
     useEffect(() => {
+        // Move callback definitions inside useEffect
+        const handleConnectionError = (error) => {
+            setConnectionError(true);    
+        };
+
+        const handleHeroJoined = (data) => {
+            console.log("handleHeroJoined", data);
+            setHero({
+                ...data.public_info,
+                cards: data.private_info.cards
+            });
+        };
+
+        const handleOpponentJoined = (data) => {
+            console.log("handleOpponentJoined", data);
+            setPlayers(data.filter(player => player.sid !== hero?.sid));
+        };
+
         const socketClient = new SocketIOClient(
             'http://localhost:8765',
             props.userName,
             {
-                onPlayerJoined: handlePlayerJoined,
-                onGameState: handleGameState,
-                onPlayerLeft: handlePlayerLeft,
-                onConnectionError: handleConnectionError
+                onHeroJoined: handleHeroJoined,
+                onOpponentJoined: handleOpponentJoined,
+                onConnectionError: handleConnectionError,
             }
         );
 
-        // Cleanup on unmount
         return () => {
             socketClient.close();
         };
-    }, [handlePlayerJoined, handleGameState, handlePlayerLeft, handleConnectionError, props.userName]);
-
+    }, [props.userName]); // Only depends on userName now
 
     // This is the main render function.
     return (
         <>
-            {/* // We can add some conditional rendering here to handle the connection error. */}
-
+        {/* // We can add some conditional rendering here to handle the connection error. */}
         {connectionError ? (
             // make this into a component for readability.
             <div className="error-container">
@@ -75,8 +63,10 @@ const Game = (props) => {
             <div className="game-container">
                 <div className="table-container">
                     {/* @TODO: we will only be using the GameState message to render all this */} 
-                    {players.map(player => (
-                            player.id !== thisPlayer?.id && (
+                    {/* It doesn't work like that, you need to send the list of other players from the server. 
+                    Each client is independent */}
+                    {/* {players.map(player => (
+                            player.id !== hero?.id && (
                                 <Opponent
                                     key={player.id}
                                     name={player.name}
@@ -87,17 +77,20 @@ const Game = (props) => {
                                 />
                             )
                         ))}
-                        {/* Render Hero component for the current player */}
-                        {console.log("thisPlayer", thisPlayer)}
-                        {thisPlayer && (
-                            <Hero
-                                name={thisPlayer.name}
-                                id={thisPlayer.id}
-                                funds={thisPlayer.funds}
-                                bet={thisPlayer.bet}
-                                action={thisPlayer.action}
-                            />
-                        )}
+                        Render Hero component for the current player */}
+                    {console.log("hero", hero)}
+                    {hero && (
+                        <Hero
+                            name={hero.name}
+                            pid={hero.pid}
+                            role={hero.role}
+                            funds={hero.funds}
+                            action={hero.last_action}
+                            bet={hero.current_bet}
+                            cards={hero.cards}
+                            bettingStatus={hero.betting_status}
+                        />
+                    )}
                 </div>
             </div>
         )}

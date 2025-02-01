@@ -55,6 +55,13 @@
   font-size: 2vh;
 }
 
+.player-bet {
+  color: #4caf50;
+  margin: 0;
+  font-size: 2vh;
+  font-weight: 500;
+}
+
 .hero-cards-container {
   display: flex;
   justify-content: center;
