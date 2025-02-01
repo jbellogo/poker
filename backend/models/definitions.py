@@ -85,12 +85,14 @@ class PlayerRole(str, Enum):
     BIG_BLIND = 'bb'
     OTHER = 'other'
 
+
 class PlayerAction(str, Enum):
     CALL = 'call'
     RAISE = 'raise'
     FOLD = 'fold'
     CHECK = 'check'
     ALLIN = 'all-in'
+    NO_ACTION = 'no-action'
 
     def to_status(self) -> PlayerStatus:
         keys = {

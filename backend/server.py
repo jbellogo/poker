@@ -9,10 +9,13 @@ This is how I want to store player info.
 This is player state. 
 {sid1: {
     "public_info": {
+        "name": str,
         "pid": int,
         "sid": str,
         "funds": int,
         "role": PlayerRole,
+        "last_action": "call",
+        "last_action_amount:" "100",
         "betting_status": PlayerStatus,
     },
     "private_info": {
@@ -21,7 +24,7 @@ This is player state.
 },
 }
 
-{type:‘player_join_request’,  name:”John Cena”}
+{type:‘hero_join_request’,  name:”John Cena”}
 '''
 
 

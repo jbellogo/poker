@@ -1,4 +1,7 @@
-from models.entities import Deck, Board, BoardStage, Player, PlayerBetResponse
+
+from models.player import Player
+from models.board import Board
+from models.deck import Deck
 from typing import List, Dict, Optional
 from uuid import UUID
 from models.definitions import *
@@ -36,11 +39,11 @@ class Game():
         return wrapper
     
     def add_player(self, sid: str, player_name: str):
-        self.players.append(Player(pid = len(self.players)+1, 
-                                   sid = sid, 
-                                   funds = self.initial_player_funds, 
-                                   betting_status = "active", 
-                                   name = player_name))
+        self.players.append(
+            Player(name = player_name,
+                   pid = len(self.players)+1, 
+                   sid = sid, 
+                   funds = self.initial_player_funds))
 
     def clear_board(self):
         self.deck : Deck = Deck()
@@ -213,12 +216,16 @@ class Game():
     def handle_player_action(self, sid, data):
         print(f"handling action from {sid}: {data}")
         type = data['type']
-        if type == 'player_join_request':
-            print(f"len(self.players)+1: {len(self.players)+1}")
-            print(f"MAX_PLAYERS: {MAX_PLAYERS}")
+        if type == 'hero_join_request':
             if len(self.players)+1 < MAX_PLAYERS:
                 self.add_player(sid, data['name'])
-                self.sio.emit('message', {"type": "player_join_success", 'data' : self.get_player_state(sid)}, to=sid)
+                print(f"New number of players: {len(self.players)}")
+                # Sent to hero, with his information.
+                self.sio.emit('message', {"type": "hero_join_success", 'data' : self.get_player_state(sid)}, to=sid)
+                # Sent to all other players, with the updated list of players.
+                players_public_info = [player.get_state()['public_info'] for player in self.players]
+                self.sio.emit('message', {"type": "new_player_join", "players" : players_public_info})
+
             else:
                 self.sio.emit('message', {"type": "player_join_failure", "message": "Game is full"}, to=sid)
                 self.sio.disconnect(sid)
