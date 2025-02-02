@@ -230,4 +230,4 @@ class Game():
                 self.sio.emit('message', {"type": "player_join_failure", "message": "Game is full"}, to=sid)
                 self.sio.disconnect(sid)
         
-
+       
