@@ -1,4 +1,4 @@
-#!/Users/juanbello/Desktop/projects/poker/pokerenv/bin/python
+#!/Users/juanbello/Desktop/projects/Poker/backend/pokerenv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys

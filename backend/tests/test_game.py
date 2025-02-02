@@ -3,12 +3,7 @@ import pprint
 
 from typing import List
 
-# f
-
-# from models.game import Game
-# from models.entities import Player
 from models import *
-
 
 
 

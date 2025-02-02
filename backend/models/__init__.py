@@ -4,4 +4,5 @@ from .deck import Deck
 from .game import Game
 from .pot import Pot
 from .config import *
+from .definitions import *
 

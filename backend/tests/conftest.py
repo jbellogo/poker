@@ -4,18 +4,27 @@ Fixtures are passed as arguments to test functions
 '''
 
 import pytest
-from models import Deck, Player, Board, BoardStage, PlayerBetResponse, Pot, PotState, Game
+from models import *
 import asyncio
-from aiohttp import ClientSession
 import pytest_asyncio
+import socketio
 
 from models.config import * # Global variables, better practice to use json.
+
+## Testing global variables
+_TESTING_SB_AMOUNT = 40
+_TESTING_INITIAL_PLAYER_FUNDS = 1000
+_TESTING_NUM_PLAYERS = 3
+
 
 
 
 @pytest.fixture
 def player_fix():
-    return Player(pid=0, funds=INITIAL_PLAYER_FUNDS)
+    return Player(name = "player1",
+                  pid=0, 
+                  sid = "sid1",
+                  funds=_TESTING_INITIAL_PLAYER_FUNDS)
 
 @pytest.fixture
 def deck_fix():
@@ -27,24 +36,39 @@ def board_fix():
 
 @pytest.fixture
 def player_list_fix():
-    return [Player(pid = i, funds=INITIAL_PLAYER_FUNDS, betting_status = "active") for i in range(1,4)]
+    players = [Player(name = f"player{i}",
+                    pid = i, 
+                    sid = f"sid{i}",
+                    funds=_TESTING_INITIAL_PLAYER_FUNDS) for i in range(1,_TESTING_NUM_PLAYERS+1)]
+    players[0].set_role(PlayerRole.SMALL_BLIND)
+    players[1].set_role(PlayerRole.BIG_BLIND)
+    return players
 
 
 # @pytest.fixture
-# def pot_fix_flop():
-#     '''For betting tests'''
-#     # I just want to set potstate
-#     new_pot_state = PotState({
-#         'call_amount': 0,
-#         'check_allowed' : True,
-#         'minimum_raise' : 100,
-#         'pot_size' : 1000
-#     })
-#     pot = Pot(bb_amount = BIG_BLIND)
-#     pot.overwrite_pot_state(new_pot_state)
-#     return pot
+# def server_fix():
+#     return sio
+
+@pytest.fixture
+def game_fix(player_list_fix):
+    sio = socketio.Server(cors_allowed_origins='*')
+    app = socketio.WSGIApp(sio)
+
+    game = Game(sio = sio,
+                sb_amount=_TESTING_SB_AMOUNT,
+                initial_player_funds=_TESTING_INITIAL_PLAYER_FUNDS)
+    for player in player_list_fix:
+        game.add_player(player.sid, player.name)
+    return game
 
 
 @pytest.fixture
-def game_fix():
-    return Game(num_players=FIX_NUM_PLAYERS, sb_amount=FIX_SB_AMOUNT)
+def hand_fix():
+    return [Card(suit=Suit.HEARTS, rank=Rank.TWO), Card(suit=Suit.HEARTS, rank=Rank.THREE)]
+
+
+@pytest.fixture
+def game_state_preflop_fix():
+    pot = PotState(call_amount=40, check_allowed=False, minimum_raise=80, pot_size=0)
+    board = BoardState(cards=[], stage=BoardStage.PREFLOP)
+    return GameState(pot=pot, board=board)

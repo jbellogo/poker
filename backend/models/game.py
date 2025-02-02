@@ -72,7 +72,7 @@ class Game():
     #     self.persist_player_action(response, game_state)
 
     def remove_player(self, sid: str) -> None:
-        self.players = [player for player in self.players if player.sid != sid]
+        self.players = [player for player in self.players if player.get_sid() != sid]
 
     def get_players(self) -> List[int]:
         '''
@@ -139,6 +139,7 @@ class Game():
         Awaits active player actions
         Updates player status from action response, ie all-in, folded, etc.
         '''
+        print("betting round")
         self.initialize_game_state(board_stage)
         self.initialize_players_state()
 
@@ -150,7 +151,6 @@ class Game():
                 break
             # print("-----------STARTING LOOP-----------")
             for player in self.active_players:
-                print(player)               
                 if player.get_betting_status() == "active":
                     # NOW) the tailored pot state is sent to player with their respective call price. 
                     state : GameState = self.get_personalized_state(player)

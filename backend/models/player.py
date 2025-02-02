@@ -34,12 +34,14 @@ class Player(Entity):
     def _cards_dealt(self) -> int:
         return self._number_cards_dealt
     
-    def get_betting_status(self):
-        return self.betting_status
     
     def set_role(self, role: PlayerRole)->None:
         self.role = role
-    
+
+    # def get_betting_status(self):
+    #     return self.betting_status
+
+
     def get_id(self) -> int:
         return self.pid
     
@@ -49,8 +51,8 @@ class Player(Entity):
     def set_status(self, new_status : PlayerStatus):
         self.betting_status = new_status
     
-    def f_amount_bet_this_hand(self):
-        return self.current_bet
+    # def f_amount_bet_this_hand(self):
+    #     return self.current_bet
     
     def reset_amount_bet_this_hand(self):
         self.current_bet = 0
@@ -74,41 +76,53 @@ class Player(Entity):
         }
         
 
-    async def request_betting_response(self) -> Optional[PlayerBetResponse]:
+    async def request_betting_response(self) -> dict:
         '''
-        Actual API call. Its a wrapper to monkeypatch its response
-          and still use make_bet to update local player fields.'''
+             # Receive this: 
+            {
+                'sid' : 'sid1',
+                'amount_bet' : 40,
+                'action' : "call",
+            }
+        '''
         await asyncio.sleep(1)
         return None
-
-
-    async def make_bet(self, game_state: GameState) -> Optional[PlayerBetResponse]: 
-        '''
-        pot_state : PotState argument neeed
-        @TODO NEEDS VALIDATORS of call amounts, minimum raises, blinds in preflop round, etc. 
-        Wrapper that Uses API response from request_betting_response() and updates local player fields.
-        @TODO needs work with the new schema. 
-        '''
-        ### prepare the JSON information package to send to player to make a betting decision: 
-
-        
-        # @TODO Implement API to connect to frontend. 
-        ## 1**) send request to player's ip address, await resposne.
-        ## this should already be validated as the pre_bet_state is betting constraints served to player. Cannot bet more than funds!
-        response : PlayerBetResponse  = await self.request_betting_response() # pass to it a GameState and PlayerState
-        print(f"bet:{response['amount_bet']}, funds: {self.funds}")
+    
+    def validate_response(self, response : dict, game_state : GameState) -> None:
+        # Already validated in frontend. Just for testing. 
         assert(response['amount_bet'] <= self.funds)
-        # We want to keep the game logic on the backend, so we can determine the options avaliable here and send them to the frontend.
-        if(response['action'] == 'fold') or (response['action'] == 'check'):
+        if(response['action'] == 'fold'):
             assert(response['amount_bet']==0) 
         if(response['action'] == 'all-in'):
             assert(response['amount_bet']==self.funds)
         if(response['action'] == 'call'):
-            assert(response['amount_bet']==game_state['pot']['call_amount'])            
+            assert(response['amount_bet']==game_state['pot']['call_amount'])  
+        if(response['action'] == 'check'):
+            assert(response['amount_bet']==0) 
+            assert(game_state['pot']['check_allowed'])  
+
+
+
+    def convert_response(self, response : dict) -> PlayerBetResponse:
+        response['action'] = PlayerAction(response['action'])
+        return PlayerBetResponse(**response)
+
+
+    async def make_bet(self, game_state: GameState) -> Optional[PlayerBetResponse]: 
+        '''
+        Wrapper that Uses API response from request_betting_response() and:
+        - validates the response
+        - converts relevant fields to internal structures (PlayerRole, PlayerAction, hand, etc)
+        - updates local player fields.
+        @TODO needs work with the new schema. 
+        '''
+        
+        response : PlayerBetResponse  = await self.request_betting_response() # pass to it a GameState and PlayerState
+        self.validate_response(response, game_state)
+        response = self.convert_response(response)
         # update local player records with response. 
         self.funds -= response['amount_bet']
         self.betting_status = PlayerAction(response['action']).to_status()  ## this one is iffy
         self.current_bet += response['amount_bet']
-
         return response
 

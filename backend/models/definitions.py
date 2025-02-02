@@ -85,7 +85,6 @@ class PlayerRole(str, Enum):
     BIG_BLIND = 'bb'
     OTHER = 'other'
 
-
 class PlayerAction(str, Enum):
     CALL = 'call'
     RAISE = 'raise'
@@ -110,11 +109,12 @@ class PlayerAction(str, Enum):
 
 class PlayerBetResponse(TypedDict):
     pid : int
+    sid : str
     player_funds : int
     amount_bet : int 
-    role : Literal["sb", "bb", "other"] = "other"
+    role : PlayerRole
     action : PlayerAction
-    hand : Tuple[Card, Card]
+    hand : List[Card]
 
 
 class BettingRoundRecord(TypedDict):
