@@ -8,14 +8,8 @@ Only you have visibility of your cards and are able to act on your behalf.
 */
 
 const Hero = (props) => {
-    useEffect(() => {
-        console.log("props", props);
-        console.log(`my address is /src/assets/user-${props.pid}.svg`);
-    }, [props.pid]);
-
     return (
         <div className="hero-container"> 
-            {console.log("props", props)}
             <div className="hero-col">
                 <img src={`/src/assets/user-${props.pid}.svg`} className="player-image" alt="Player1" />
                 <h3 className="player-name">{props.name}</h3>

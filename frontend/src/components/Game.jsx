@@ -3,11 +3,9 @@ import '../styles/Game.css';
 import Hero from './Hero';
 import Opponent from './Opponent';
 import SocketIOClient from '../services/Client';
+import ConnectionError from './ConnectionError';
 
-// When you open the page, you see the welcome-screen. When you click, "join game", you see the game-screen.
 
-
-// @TODO Eventually will rename this to MultiplePlayerGame to differentiate from SinglePlayerGame agains the AI.
 const Game = (props) => {
     const [connectionError, setConnectionError] = useState(false);
     const [players, setPlayers] = useState([]); // Use this. Contains other players public information.
@@ -54,30 +52,27 @@ const Game = (props) => {
         {/* // We can add some conditional rendering here to handle the connection error. */}
         {connectionError ? (
             // make this into a component for readability.
-            <div className="error-container">
-                <h2>Connection Error</h2>
-                <p>Unable to connect to the game server. Please try again later.</p>
-            </div>
+            <ConnectionError />
         ) : (
+            console.log("MAIN GAME VIEW"),
             // make this into a component for readability.
             <div className="game-container">
                 <div className="table-container">
-                    {/* @TODO: we will only be using the GameState message to render all this */} 
                     {/* It doesn't work like that, you need to send the list of other players from the server. 
                     Each client is independent */}
-                    {/* {players.map(player => (
-                            player.id !== hero?.id && (
+                    {console.log("players", players)}
+                   
+                    {players.map(player => (
+                            player.sid !== hero?.sid && (
                                 <Opponent
-                                    key={player.id}
                                     name={player.name}
-                                    id={player.id}
+                                    id={player.pid}
                                     funds={player.funds}
-                                    bet={player.bet}
-                                    action={player.action}
+                                    bet={player.current_bet}
+                                    action={player.last_action}
                                 />
                             )
                         ))}
-                        Render Hero component for the current player */}
                     {console.log("hero", hero)}
                     {hero && (
                         <Hero
