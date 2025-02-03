@@ -51,9 +51,7 @@ class Pot():
             self.pot_state['minimum_raise'] = 2*self.bb_amount
 
     
-    def update_pot_state(self, last_active_player: Player, last_action : PlayerBetResponse) -> None:
-        # print("LAST PLAYER ACTION: ")
-        # print(last_action)
+    def update_pot_state(self, last_active_player: Player, last_action : PlayerBetResponse, players_to_call : int) -> None:
         action : str = last_action['action']
         amount : int = last_action['amount_bet']
         self.pot_state['pot_size'] += amount
@@ -62,8 +60,10 @@ class Pot():
             self.pot_state['check_allowed'] = True
         elif action == 'raise':
             self.pot_state['check_allowed'] = False
-            self.pot_state['call_amount'] = last_active_player.f_amount_bet_this_hand() # their total becomes the calling amount
+            self.pot_state['call_amount'] = last_active_player.get_current_bet() # their total becomes the calling amount
             self.pot_state['minimum_raise'] = 2*amount
+        elif action == 'call'and players_to_call == 0:
+            self.pot_state['check_allowed'] = True
         else:
             self.pot_state['check_allowed'] = False
 

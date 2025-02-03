@@ -104,9 +104,6 @@ class PlayerAction(str, Enum):
         return PlayerStatus(keys[self.value])
 
 
-
-
-
 class PlayerBetResponse(TypedDict):
     pid : int
     sid : str
@@ -117,14 +114,34 @@ class PlayerBetResponse(TypedDict):
     hand : List[Card]
 
 
+
+class PlayerPublicInfo(TypedDict):
+    name : str
+    pid : int
+    sid : str
+    funds : int
+    role : PlayerRole
+    current_bet : int
+    last_action : PlayerAction
+    betting_status : PlayerStatus
+
+class PlayerPrivateInfo(TypedDict):
+    cards : List[Card]
+
+class PlayerState(TypedDict):
+    public_info : PlayerPublicInfo
+    private_info : PlayerPrivateInfo
+
+
 class BettingRoundRecord(TypedDict):
     '''
     ## To save in database for subsequent analysis. 
     Not tested yet
     '''
-    pid : int
+    sid : str
     game_state : GameState     # the state before player made their move. 
     response : PlayerBetResponse # The move the player made given the pot_state
+    player_state : PlayerState
 
 ################################################################################################
 ################################################################################################

@@ -12,7 +12,7 @@ import socketio
 from models.config import * # Global variables, better practice to use json.
 
 ## Testing global variables
-_TESTING_SB_AMOUNT = 40
+_TESTING_SB_AMOUNT = 20
 _TESTING_INITIAL_PLAYER_FUNDS = 1000
 _TESTING_NUM_PLAYERS = 3
 
@@ -51,16 +51,18 @@ def player_list_fix():
 
 @pytest.fixture
 def game_fix(player_list_fix):
-    sio = socketio.Server(cors_allowed_origins='*')
-    app = socketio.WSGIApp(sio)
+    # sio = socketio.Server(cors_allowed_origins='*')
+    # app = socketio.WSGIApp(sio)
 
-    game = Game(sio = sio,
-                sb_amount=_TESTING_SB_AMOUNT,
+    game = Game(sb_amount=_TESTING_SB_AMOUNT,
                 initial_player_funds=_TESTING_INITIAL_PLAYER_FUNDS)
     for player in player_list_fix:
         game.add_player(player.sid, player.name)
-    return game
-
+    
+    return game  # Use yield instead of return
+    # Cleanup after the test
+    # sio.disconnect()  # Disconnect all clients
+    # sio.stop()
 
 @pytest.fixture
 def hand_fix():

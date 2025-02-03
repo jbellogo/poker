@@ -15,7 +15,7 @@ class Player(Entity):
 
     ## internaly set
     role : PlayerRole = PlayerRole.OTHER  # @TODO update them every round
-    betting_status : PlayerStatus = PlayerStatus.INACTIVE
+    betting_status : PlayerStatus = PlayerStatus.ACTIVE ## carefull with this. 
     last_action : PlayerAction = PlayerAction.NO_ACTION
 
     current_bet : int = 0
@@ -38,8 +38,8 @@ class Player(Entity):
     def set_role(self, role: PlayerRole)->None:
         self.role = role
 
-    # def get_betting_status(self):
-    #     return self.betting_status
+    def get_betting_status(self):
+        return self.betting_status.value
 
 
     def get_id(self) -> int:
@@ -48,16 +48,16 @@ class Player(Entity):
     def get_sid(self) -> str:
         return self.sid
 
-    def set_status(self, new_status : PlayerStatus):
+    def set_status(self, new_status : PlayerStatus)->None:
         self.betting_status = new_status
-    
-    # def f_amount_bet_this_hand(self):
-    #     return self.current_bet
+        
+    def get_current_bet(self)->int:
+        return self.current_bet
     
     def reset_amount_bet_this_hand(self):
         self.current_bet = 0
 
-    def get_state(self):
+    def get_state(self)->PlayerState:
         # you can make this into a TypedDict if you want. 
         return {
             "public_info": {
@@ -88,7 +88,7 @@ class Player(Entity):
         await asyncio.sleep(1)
         return None
     
-    def validate_response(self, response : dict, game_state : GameState) -> None:
+    def validate_response(self, response : dict, game_state : GameState) -> PlayerBetResponse:
         # Already validated in frontend. Just for testing. 
         assert(response['amount_bet'] <= self.funds)
         if(response['action'] == 'fold'):
@@ -100,12 +100,10 @@ class Player(Entity):
         if(response['action'] == 'check'):
             assert(response['amount_bet']==0) 
             assert(game_state['pot']['check_allowed'])  
-
-
-
-    def convert_response(self, response : dict) -> PlayerBetResponse:
-        response['action'] = PlayerAction(response['action'])
         return PlayerBetResponse(**response)
+
+
+
 
 
     async def make_bet(self, game_state: GameState) -> Optional[PlayerBetResponse]: 
@@ -118,11 +116,11 @@ class Player(Entity):
         '''
         
         response : PlayerBetResponse  = await self.request_betting_response() # pass to it a GameState and PlayerState
-        self.validate_response(response, game_state)
-        response = self.convert_response(response)
+        response = self.validate_response(response, game_state)
         # update local player records with response. 
         self.funds -= response['amount_bet']
         self.betting_status = PlayerAction(response['action']).to_status()  ## this one is iffy
         self.current_bet += response['amount_bet']
+        self.last_action = response['action']
         return response
 

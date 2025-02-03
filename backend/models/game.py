@@ -14,7 +14,7 @@ import copy
 
 
 class Game():
-    def __init__(self, sio, max_players : int = MAX_PLAYERS, sb_amount : int = SB_AMOUNT, initial_player_funds : int = INITIAL_PLAYER_FUNDS):
+    def __init__(self, sio = None, max_players : int = MAX_PLAYERS, sb_amount : int = SB_AMOUNT, initial_player_funds : int = INITIAL_PLAYER_FUNDS):
         self.sio = sio # socketio server
         self.max_players = max_players
         self.sb_amount = sb_amount
@@ -59,17 +59,14 @@ class Game():
         self.players.append(self.players.pop(0)) # one at a time.
  
 
-    def persist_player_action(self, response: PlayerBetResponse, game_state: GameState) -> None:        
-        betting_record = BettingRoundRecord(pid= response['pid'], 
+    def persist_player_action(self, response: PlayerBetResponse, game_state: GameState, player_state: PlayerState) -> None:        
+        betting_record = BettingRoundRecord(sid= response['sid'], 
                                             response=response, 
-                                            game_state=game_state) 
+                                            game_state=game_state,
+                                            player_state=player_state) 
         stage : str = game_state['board']['stage']
         self.hand_history[stage].append(betting_record)
 
-    # def handle_player_action(self, response: PlayerBetResponse, game_state: GameState, player:Player) -> None:
-    #     if response['action'] # update player status
-
-    #     self.persist_player_action(response, game_state)
 
     def remove_player(self, sid: str) -> None:
         self.players = [player for player in self.players if player.get_sid() != sid]
@@ -117,9 +114,9 @@ class Game():
         self.active_players = copy.deepcopy(self.players)
 
 
-    def get_personalized_state(self, player:Player) -> GameState:
+    def get_personalized_state(self, player : Player) -> GameState:
         pot : PotState = self.pot.get_state() # this returns a copy, perfect for us
-        pot['call_amount'] -= player.f_amount_bet_this_hand()
+        pot['call_amount'] -= player.get_current_bet()
         board : BoardState = self.board.get_state()
         return GameState(pot= pot, board=board)
 
@@ -139,28 +136,27 @@ class Game():
         Awaits active player actions
         Updates player status from action response, ie all-in, folded, etc.
         '''
-        print("betting round")
         self.initialize_game_state(board_stage)
         self.initialize_players_state()
 
         active_players :int = len(self.active_players)
         players_to_call:int = active_players
 
-        while players_to_call != 0:
-            if players_to_call == 0:
+        while players_to_call > 0:
+            if players_to_call <= 0:
                 break
-            # print("-----------STARTING LOOP-----------")
+            # # print("-----------STARTING LOOP-----------")
+            # print(f"players_to_call: {players_to_call}")
+            # print(f"self.active_players: {self.active_players}")
             for player in self.active_players:
+                # print(f"player status: {player.get_betting_status()}")
                 if player.get_betting_status() == "active":
                     # NOW) the tailored pot state is sent to player with their respective call price. 
                     state : GameState = self.get_personalized_state(player)
-                    # print(f"calling await player.make_bet(), num raises={number_of_raises}")
                     response : Optional[PlayerBetResponse] = await player.make_bet(state)
 
                     # NOW) persist betting record for player. 
-                    self.persist_player_action(response, state)
-                    # NOW) THEN WE UPDATE pot state with player response. this way we store the pot_state at the time before the player makes his move
-                    self.pot.update_pot_state(player, response)
+                    self.persist_player_action(response, state, player.get_state())
                     # NOW) we need a function which updates the list of players if they have gone all-in or folded
                     self.update_active_players(player, response['action']) 
 
@@ -176,7 +172,11 @@ class Game():
                     elif player_action == "call":
                         players_to_call -=1
                     elif player_action == "check":
-                        pass
+                        pass ## you sure?
+                    
+                    # NOW) THEN WE UPDATE pot state with player response. this way we store the pot_state at the time before the player makes his move
+                    self.pot.update_pot_state(player, response, players_to_call)
+
                         
 
         self.persist_betting_round()
