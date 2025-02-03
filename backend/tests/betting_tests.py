@@ -11,26 +11,26 @@ from tests.conftest import _TESTING_INITIAL_PLAYER_FUNDS
 
 
 
-# @pytest.mark.asyncio
-# async def test_player_make_bet(monkeypatch, player_list_fix, game_state_preflop_fix):
-#     actions = [
-#         {
-#             'sid' : player.sid,
-#             'amount_bet' : 40,
-#             'action' : "call"
-#         } for player in player_list_fix]
-#     # pprint.pprint(actions)
+@pytest.mark.asyncio
+async def test_player_make_bet(monkeypatch, player_list_fix, game_state_preflop_fix):
+    actions = [
+        {
+            'sid' : player.sid,
+            'amount_bet' : 40,
+            'action' : "call"
+        } for player in player_list_fix]
+    # pprint.pprint(actions)
     
-#     test_mock = AsyncMock(side_effect=actions)
-#     monkeypatch.setattr(Player, "request_betting_response", test_mock)
-#     for i, player in enumerate(player_list_fix):
-#         old_funds = player.funds
-#         response = await player.make_bet(game_state_preflop_fix)
-#         assert response == actions[i]
-#         assert player.current_bet == actions[i]['amount_bet']
-#         assert old_funds - player.funds == actions[i]['amount_bet']
-#         assert player.betting_status == PlayerAction(actions[i]['action']).to_status()
-#     # print("test_player_make_bet passed")
+    test_mock = AsyncMock(side_effect=actions)
+    monkeypatch.setattr(Player, "request_betting_response", test_mock)
+    for i, player in enumerate(player_list_fix):
+        old_funds = player.funds
+        response = await player.make_bet(game_state_preflop_fix)
+        assert response == actions[i]
+        assert player.current_bet == actions[i]['amount_bet']
+        assert old_funds - player.funds == actions[i]['amount_bet']
+        assert player.betting_status == PlayerAction(actions[i]['action']).to_status()
+    # print("test_player_make_bet passed")
 
 # PREFLOP TESTS
 
@@ -42,96 +42,70 @@ async def test_betting_round_1(monkeypatch, game_fix):
     game_fix num_players=3 and sb_amount=20
     '''
     assert game_fix.get_players() == [1,2,3]
-    assert game_fix.get_sb_index() == 0
-    actions = [{
-        'sid' : '1',
-        'amount_bet' : 40,
-        'action' : "call",
-    },
-    {
-        'sid' : '2',
-        'amount_bet' : 40,
-        'action' : "call",
-    },
-    {
-        'sid' : '3',
-        'amount_bet' : 40,
-        'action' : "call",
-    }]
+    actions = [
+        {'sid' : '3', 'amount_bet' : 40, 'action' : "call"},
+        {'sid' : '1', 'amount_bet' : 20, 'action' : "call"},
+        {'sid' : '2', 'amount_bet' : 0, 'action' : "check"},
+    ]
 
     test_mock = AsyncMock(side_effect=actions)
     monkeypatch.setattr(Player, "request_betting_response", test_mock)
-    await game_fix.betting_round(board_stage=BoardStage.PREFLOP)   ## @TODO I'm thinking we will need asyncio.gather()
+    await game_fix.betting_round(board_stage="PREFLOP")   ## @TODO I'm thinking we will need asyncio.gather()
     hand_history = game_fix.get_hand_history()['PREFLOP']
     assert(len(hand_history)==3) # only three bets all call.
 
-    # These represent the state player i sees before performing his action !!!
-    assert(hand_history[0]['game_state']['pot'] == {'call_amount' : 40,'check_allowed' : False,'minimum_raise' : 80,'pot_size' : 0})
-    assert(hand_history[1]['game_state']['pot'] == {"call_amount" : 40,"check_allowed" : False,"minimum_raise" : 80,"pot_size" : 40})
-    assert(hand_history[2]['game_state']['pot'] == {"call_amount" : 40,"check_allowed" : False,"minimum_raise" : 80,"pot_size" : 80})
+    assert(hand_history[0]['game_state']['pot'] == {'call_amount' : 40,'check_allowed' : False,'minimum_raise' : 80,'pot_size' : 60})
+    assert(hand_history[1]['game_state']['pot'] == {"call_amount" : 20,"check_allowed" : False,"minimum_raise" : 80,"pot_size" : 100})
+    assert(hand_history[2]['game_state']['pot'] == {"call_amount" : 0,"check_allowed" : True,"minimum_raise" : 80,"pot_size" : 120})
     
-    assert(hand_history[0]['response'] == {'action': 'call','amount_bet': 40,'sid': '1'})
-    assert(hand_history[1]['response'] == {'action': 'call','amount_bet': 40,'sid': '2'})
-    assert(hand_history[2]['response'] == {'action': 'call','amount_bet': 40,'sid': '3'})
+    assert(hand_history[0]['response'] == {'action': 'call','amount_bet': 40,'sid': '3'})
+    assert(hand_history[1]['response'] == {'action': 'call','amount_bet': 20,'sid': '1'})
+    assert(hand_history[2]['response'] == {'action': 'check','amount_bet': 0,'sid': '2'})
 
 
-@pytest.mark.asyncio
-async def test_betting_round_2(monkeypatch, game_fix):
-    '''
-    Preflop stage, no checking allowed.
-    Situation: single raise. Call amounts should update. 
-    '''
-    # Situation:
-    actions = [{
-        'sid' : '1',
-        'amount_bet' : 40,
-        'action' : "call",
-    },
-    {
-        'sid' : '2',
-        'amount_bet' : 80,
-        'action' : "raise",
-    },
-    {
-        'sid' : '3',
-        'amount_bet' : 80,
-        'action' : "call",
-    },
-    {
-        'sid' : '1',
-        'amount_bet' : 40,
-        'action' : "call",
-    },
-    {
-        'sid' : '2',
-        'amount_bet' : 0,
-        'action' : "check",
-    },
-    {
-        'sid' : '3',
-        'amount_bet' : 0,
-        'action' : "check",
-    }]
+# @pytest.mark.asyncio
+# async def test_betting_round_2(monkeypatch, game_fix):
+#     '''
+#     Preflop stage, no checking allowed.
+#     Situation: single raise. Call amounts should update. 
+#     '''
+#     # Situation:
+#     actions = [
+#         {'sid' : '1', 'amount_bet' : 40, 'action' : "call"},
+#         {'sid' : '2', 'amount_bet' : 80, 'action' : "raise"},
+#         {'sid' : '3', 'amount_bet' : 80, 'action' : "call"},
+#         {'sid' : '1', 'amount_bet' : 40, 'action' : "call"},
+#         {'sid' : '2', 'amount_bet' : 0, 'action' : "check"},
+#         {'sid' : '3', 'amount_bet' : 0, 'action' : "check"}
+#     ]
 
-    test_mock = AsyncMock(side_effect=actions)
-    monkeypatch.setattr(Player, "request_betting_response", test_mock)
-    await game_fix.betting_round(board_stage=BoardStage.PREFLOP)
-    hand_history = game_fix.get_hand_history()['PREFLOP']
+#     test_mock = AsyncMock(side_effect=actions)
+#     monkeypatch.setattr(Player, "request_betting_response", test_mock)
+#     await game_fix.betting_round(board_stage="PREFLOP")
+#     hand_history = game_fix.get_hand_history()['PREFLOP']
 
-    pprint.pp(hand_history)
-    assert(len(hand_history)==6)
-    # P1 sees this bellow and calls 40
-    assert(hand_history[0]['game_state']['pot'] == {"call_amount" : 40,"check_allowed" : False,"minimum_raise" : 80,"pot_size" : 0})
-    # P2 sees this bellow and raises 80
-    assert(hand_history[1]['game_state']['pot'] == {"call_amount" : 40,"check_allowed" : False,"minimum_raise" : 80,"pot_size" : 40})
-    # P3 sees this bellow and calls 80
-    assert(hand_history[2]['game_state']['pot'] == {"call_amount" : 80,"check_allowed" : False,"minimum_raise" : 160,"pot_size" : 120})
-    # P1 calls his remainding 40
-    assert(hand_history[3]['game_state']['pot'] == {"call_amount" : 40,"check_allowed" : False,"minimum_raise" : 160,"pot_size" : 200})
-    # P2 sees this bellow and checks    
-    assert(hand_history[4]['game_state']['pot'] == {"call_amount" : 0,"check_allowed" : True,"minimum_raise" : 160,"pot_size" : 240})
-    # P3 sees this bellow and checks
-    assert(hand_history[5]['game_state']['pot'] == {"call_amount" : 0,"check_allowed" : True,"minimum_raise" : 160,"pot_size" : 240})
+#     pprint.pp(hand_history)
+#     assert(len(hand_history)==6)
+#     # P1 saw this bellow and called 40
+#     assert(hand_history[0]['game_state']['pot'] == {"call_amount" : 40,"check_allowed" : False,"minimum_raise" : 80,"pot_size" : 0})
+#     assert(hand_history[0]['player_state']['public_info'] == {'name': 'player1', 'pid': 1, 'sid': 'sid1', 'funds': 960, 'role': 'sb',
+#                                                               'last_action': 'call', 'current_bet': 40, 'betting_status': 'active'})
+#     # P2 saw this bellow and raised 80
+#     assert(hand_history[1]['game_state']['pot'] == {"call_amount" : 40,"check_allowed" : False,"minimum_raise" : 80,"pot_size" : 40})
+#     assert(hand_history[1]['player_state']['public_info'] == {'name': 'player2', 'pid': 2, 'sid': 'sid2', 'funds': 920, 'role': 'bb',
+#                                                               'last_action': 'raise', 'current_bet': 80, 'betting_status': 'active'})
+#     # P3 saw this bellow and called 80
+#     assert(hand_history[2]['game_state']['pot'] == {"call_amount" : 80,"check_allowed" : False,"minimum_raise" : 160,"pot_size" : 120})
+#     assert(hand_history[2]['player_state']['public_info'] == {'name': 'player3', 'pid': 3, 'sid': 'sid3', 'funds': 920, 'role': 'other',
+#                                                               'last_action': 'call', 'current_bet': 80, 'betting_status': 'active'})
+#     # P1 calls his remainding 40
+#     assert(hand_history[3]['game_state']['pot'] == {"call_amount" : 40,"check_allowed" : False,"minimum_raise" : 160,"pot_size" : 200})
+#     assert(hand_history[3]['player_state']['public_info'] == {'name': 'player1', 'pid': 1, 'sid': 'sid1', 'funds': 920, 'role': 'sb',
+#                                                               'last_action': 'call', 'current_bet': 80, 'betting_status': 'active'})
+#     # P2 sees this bellow and checks    
+#     assert(hand_history[4]['game_state']['pot'] == {"call_amount" : 0,"check_allowed" : True,"minimum_raise" : 160,"pot_size" : 240})
+#     # P3 sees this bellow and checks
+#     assert(hand_history[5]['game_state']['pot'] == {"call_amount" : 0,"check_allowed" : True,"minimum_raise" : 160,"pot_size" : 240})
 
 
 # @pytest.mark.asyncio

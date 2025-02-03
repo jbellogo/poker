@@ -23,20 +23,20 @@ class Game():
         self.rounds  : List[BoardStage] = [BoardStage.PREFLOP, BoardStage.FLOP, BoardStage.TURN, BoardStage.RIVER]
         self.players : List[Player] = []
         self.pot : Pot = Pot(sb_amount=sb_amount)
-        self.sb_index : int = 0
+        # self.sb_index : int = 0
         self.deck : Deck =  Deck()
         self.board : Board = Board()
         # For persistence
         self.hand_history : Dict[str, List[BettingRoundRecord]] = {"PREFLOP": [], "FLOP":[], "TURN":[], "RIVER":[]} 
 
 
-    def next_sb_turn(method):
-        '''decorator, increases modular count for small_blin index, corresponding to next turn.'''
-        def wrapper(self, *args, **kw):
-            self.sb_index += 1
-            self.sb_index %= len(self.players)
-            return method(self, *args, **kw)
-        return wrapper
+    # def next_sb_turn(method):
+    #     '''decorator, increases modular count for small_blin index, corresponding to next turn.'''
+    #     def wrapper(self, *args, **kw):
+    #         self.sb_index += 1
+    #         self.sb_index %= len(self.players)
+    #         return method(self, *args, **kw)
+    #     return wrapper
     
     def add_player(self, sid: str, player_name: str):
         self.players.append(
@@ -50,11 +50,12 @@ class Game():
         self.board : Board = Board()
 
 
-    @next_sb_turn
+    # @next_sb_turn
     def update_player_turns(self) -> None:
         '''
-        Copies the list starting at sb_index and wrapping around
-        Increases the sb_index turn through decorator
+        shifts the players list to the left, 
+        effectively updating the sb_index.
+        sb_index remains 0 throughout.
         '''
         self.players.append(self.players.pop(0)) # one at a time.
  
@@ -77,8 +78,8 @@ class Game():
         '''
         return [player.get_id() for player in self.players]
     
-    def get_sb_index(self) -> int:
-        return self.sb_index
+    # def get_sb_index(self) -> int:
+    #     return self.sb_index
 
 
     def get_hand_history(self):
@@ -98,6 +99,14 @@ class Game():
         self.pot.initialize_pot_state(board_stage)
         self.board.set_round(board_stage)  # just needed for testing
 
+    def collect_blinds(self):
+        '''
+        Take blinds from sb and bb, first turn is player #3
+        '''
+        self.active_players[0].collect_blind(self.sb_amount)
+        self.active_players[1].collect_blind(self.sb_amount)
+        self.pot.collect_blinds(self.sb_amount)
+
     def initialize_players_state(self):
         '''
         takes care of updating player roles, and resetting their amount bet this hand to 0.
@@ -105,13 +114,19 @@ class Game():
 
         for i, player in enumerate(self.players):
             if i == 0: 
-                self.players[i].set_role(PlayerRole.SMALL_BLIND)
+                self.players[i].set_role("sb")
             elif i==1: 
-                self.players[i].set_role(PlayerRole.BIG_BLIND)
+                self.players[i].set_role("bb")
             else: 
-                self.players[i].set_role(PlayerRole.OTHER)
+                self.players[i].set_role("other")
             player.reset_amount_bet_this_hand()
+
+        ## all our work is done on active players
         self.active_players = copy.deepcopy(self.players)
+        self.collect_blinds()
+        # To start at player #3
+        self.active_players.append(self.active_players.pop(0))
+        self.active_players.append(self.active_players.pop(0))
 
 
     def get_personalized_state(self, player : Player) -> GameState:
@@ -125,9 +140,10 @@ class Game():
         updates player statuses based on response
         but now we are mutating the thing we are iterating...
         '''
-        if response_action in [PlayerAction.ALLIN, PlayerAction.FOLD]:
+        if response_action in ['all-in', 'fold']:
             # How do we hide them from the list?
-            self.active_players.remove(player)
+            self.active_players.remove(player) # maybe call it betting_players?
+
 
 
     async def betting_round(self, board_stage : BoardStage) -> None:  
@@ -140,7 +156,7 @@ class Game():
         self.initialize_players_state()
 
         active_players :int = len(self.active_players)
-        players_to_call:int = active_players
+        players_to_call:int = active_players-1 # bb does not necessarily need to call
 
         while players_to_call > 0:
             if players_to_call <= 0:
@@ -148,11 +164,14 @@ class Game():
             # # print("-----------STARTING LOOP-----------")
             # print(f"players_to_call: {players_to_call}")
             # print(f"self.active_players: {self.active_players}")
-            for player in self.active_players:
-                # print(f"player status: {player.get_betting_status()}")
+            for i, player in enumerate(self.active_players):
+                print("------------ NEW PLAYER ------------")
+                print(f"player state: {player.get_state()}")
                 if player.get_betting_status() == "active":
                     # NOW) the tailored pot state is sent to player with their respective call price. 
+                    print(f"player {player.get_id()} pot state: {self.pot.get_state()}")
                     state : GameState = self.get_personalized_state(player)
+                    print(f"player {player.get_id()} personalized state: {state}")
                     response : Optional[PlayerBetResponse] = await player.make_bet(state)
 
                     # NOW) persist betting record for player. 
@@ -175,7 +194,7 @@ class Game():
                         pass ## you sure?
                     
                     # NOW) THEN WE UPDATE pot state with player response. this way we store the pot_state at the time before the player makes his move
-                    self.pot.update_pot_state(player, response, players_to_call)
+                    self.pot.update_pot_state(last_player=player, last_action=response, next_player=self.active_players[(i+1)%active_players])
 
                         
 
@@ -214,12 +233,15 @@ class Game():
 
 
     def handle_player_action(self, sid, data):
-        print(f"handling action from {sid}: {data}")
+        '''
+        Interacts with the socketio server to handle player actions.
+        '''
+        # print(f"handling action from {sid}: {data}")
         type = data['type']
         if type == 'hero_join_request':
             if len(self.players)+1 < MAX_PLAYERS:
                 self.add_player(sid, data['name'])
-                print(f"New number of players: {len(self.players)}")
+                # print(f"New number of players: {len(self.players)}")
                 # Sent to hero, with his information.
                 self.sio.emit('message', {"type": "hero_join_success", 'data' : self.get_player_state(sid)}, to=sid)
                 # Sent to all other players, with the updated list of players.

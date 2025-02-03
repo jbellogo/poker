@@ -14,10 +14,11 @@ class Player(Entity):
     funds : int
 
     ## internaly set
-    role : PlayerRole = PlayerRole.OTHER  # @TODO update them every round
-    betting_status : PlayerStatus = PlayerStatus.ACTIVE ## carefull with this. 
-    last_action : PlayerAction = PlayerAction.NO_ACTION
+    role : PlayerRole = "other"  # @TODO update them every round
+    betting_status : PlayerStatus = "active" ## carefull with this. 
+    last_action : PlayerAction = "no-action"
 
+    # internal
     current_bet : int = 0
 
 
@@ -27,35 +28,46 @@ class Player(Entity):
     # supporting info
     _number_cards_dealt : int = 2
 
-
     def __str__(self):
         return self.model_dump_json()
 
     def _cards_dealt(self) -> int:
         return self._number_cards_dealt
     
-    
     def set_role(self, role: PlayerRole)->None:
         self.role = role
+    
+    def set_status(self, new_status : PlayerStatus)->None:
+        self.betting_status = new_status
 
     def get_betting_status(self):
-        return self.betting_status.value
-
+        return self.betting_status
 
     def get_id(self) -> int:
         return self.pid
     
     def get_sid(self) -> str:
         return self.sid
-
-    def set_status(self, new_status : PlayerStatus)->None:
-        self.betting_status = new_status
+    
+    def get_role(self) -> PlayerRole:
+        return self.role
         
     def get_current_bet(self)->int:
         return self.current_bet
     
     def reset_amount_bet_this_hand(self):
         self.current_bet = 0
+
+    def collect_blind(self, sb_amount : int):
+        print(f"collecting blind for {self.role}")
+        if self.role == "sb":
+            print(f"sb collecting amount: {sb_amount}")
+            self.funds -= sb_amount
+            self.current_bet += sb_amount
+        elif self.role == "bb":
+            print(f"bb collecting amount: {sb_amount*2}")
+            self.funds -= sb_amount*2
+            self.current_bet += sb_amount*2
 
     def get_state(self)->PlayerState:
         # you can make this into a TypedDict if you want. 
@@ -65,10 +77,10 @@ class Player(Entity):
                 "pid": self.pid,
                 "sid": self.sid,
                 "funds": self.funds,
-                "role": self.role.value,
-                "last_action": self.last_action.value,
+                "role": self.role,
+                "last_action": self.last_action,
                 "current_bet": self.current_bet,
-                "betting_status": self.betting_status.value
+                "betting_status": self.betting_status
             },
             "private_info": {
                 "cards": self.cards

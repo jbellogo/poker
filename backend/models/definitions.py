@@ -101,7 +101,7 @@ class PlayerAction(str, Enum):
             'check': 'active',
             'all-in': 'all-in'
         }
-        return PlayerStatus(keys[self.value])
+        return keys[self.value]
 
 
 class PlayerBetResponse(TypedDict):

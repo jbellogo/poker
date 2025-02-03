@@ -5,7 +5,7 @@ class Board(Entity):
     '''
     shows the community cards. 
     '''
-    stage : BoardStage = BoardStage.PREFLOP
+    stage : BoardStage = "PREFLOP"
 
     def __str__(self) -> str:
         return super().__str__()
@@ -20,7 +20,7 @@ class Board(Entity):
         
     #     return indicator
     def set_round(self, stage : BoardStage):
-        self.stage = stage.value
+        self.stage = stage
 
     def best_hand(self, player_hand : List[Card]):
         pass

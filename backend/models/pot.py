@@ -39,8 +39,8 @@ class Pot():
         return self.pot_state.copy()
     
 
-    def update_check_allowed(self, boolean:bool)->None:
-        self.pot_state['check_allowed'] = boolean
+    # def update_check_allowed(self, boolean:bool)->None:
+    #     self.pot_state['check_allowed'] = boolean
 
     def initialize_pot_state(self, board_stage:BoardStage):
         if board_stage == BoardStage.PREFLOP:
@@ -50,22 +50,30 @@ class Pot():
             self.pot_state['call_amount'] = 0
             self.pot_state['minimum_raise'] = 2*self.bb_amount
 
+    def collect_blinds(self, sb_amount : int):
+        self.pot_state['pot_size'] += 3*sb_amount
     
-    def update_pot_state(self, last_active_player: Player, last_action : PlayerBetResponse, players_to_call : int) -> None:
-        action : str = last_action['action']
-        amount : int = last_action['amount_bet']
-        self.pot_state['pot_size'] += amount
+    def update_pot_state(self, last_player: Player, last_action : PlayerBetResponse, next_player : Player) -> None:
+        self.pot_state['pot_size'] += last_action['amount_bet']
 
-        if action=='check':
-            self.pot_state['check_allowed'] = True
-        elif action == 'raise':
-            self.pot_state['check_allowed'] = False
-            self.pot_state['call_amount'] = last_active_player.get_current_bet() # their total becomes the calling amount
-            self.pot_state['minimum_raise'] = 2*amount
-        elif action == 'call'and players_to_call == 0:
+        # if action=='check':
+        #     self.pot_state['check_allowed'] = True
+        if last_action['action'] == 'raise':
+            # self.pot_state['check_allowed'] = False
+            self.pot_state['call_amount'] = last_player.get_current_bet() # their total becomes the calling amount
+            self.pot_state['minimum_raise'] = 2*last_action['amount_bet']
+        ## THIS SHOLD BE DEPENDANT ON THE PLAYER ABOUT TO ACT!!
+        # if their current bet is equal to the call amount, check is allowed.
+        # print(f"next_player.get_current_bet(): {next_player.get_current_bet()}")
+        # print(f"self.pot_state['call_amount']: {self.pot_state['call_amount']}")
+        if next_player.get_current_bet() == self.pot_state['call_amount']:
             self.pot_state['check_allowed'] = True
         else:
             self.pot_state['check_allowed'] = False
+        # elif action == 'call'and players_to_call == 0:
+        #     self.pot_state['check_allowed'] = True
+        # else:
+        #     self.pot_state['check_allowed'] = False
 
     def overwrite_pot_state(self, new_pot_state : PotState):
         self.pot_state = new_pot_state
