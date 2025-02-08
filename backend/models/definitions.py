@@ -57,7 +57,7 @@ class BoardStage(str, Enum):
     RIVER = 'RIVER'
         
 class PotState(TypedDict):
-    call_amount : int
+    call_total : int   # call_amount changes from player to player, so it is set in Player class. 
     check_allowed : bool
     minimum_raise : int
     pot_size : int

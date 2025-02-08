@@ -108,13 +108,11 @@ class Player(Entity):
         if(response['action'] == 'all-in'):
             assert(response['amount_bet']==self.funds)
         if(response['action'] == 'call'):
-            assert(response['amount_bet']==game_state['pot']['call_amount'])  
+            assert(response['amount_bet'] + self.current_bet == game_state['pot']['call_total'])  
         if(response['action'] == 'check'):
             assert(response['amount_bet']==0) 
             assert(game_state['pot']['check_allowed'])  
         return PlayerBetResponse(**response)
-
-
 
 
 
@@ -126,7 +124,6 @@ class Player(Entity):
         - updates local player fields.
         @TODO needs work with the new schema. 
         '''
-        
         response : PlayerBetResponse  = await self.request_betting_response() # pass to it a GameState and PlayerState
         response = self.validate_response(response, game_state)
         # update local player records with response. 
