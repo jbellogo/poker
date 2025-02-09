@@ -71,6 +71,6 @@ def hand_fix():
 
 @pytest.fixture
 def game_state_preflop_fix():
-    pot = PotState(call_amount=40, check_allowed=False, minimum_raise=80, pot_size=0)
+    pot = PotState(call_total=40, check_allowed=False, minimum_raise=80, pot_size=0)
     board = BoardState(cards=[], stage=BoardStage.PREFLOP)
     return GameState(pot=pot, board=board)

@@ -23,6 +23,7 @@ class Game():
         self.rounds  : List[BoardStage] = [BoardStage.PREFLOP, BoardStage.FLOP, BoardStage.TURN, BoardStage.RIVER]
         self.players : List[Player] = []
         self.pot : Pot = Pot(sb_amount=sb_amount)
+        self.raise_occurred : bool = False
         # self.sb_index : int = 0
         self.deck : Deck =  Deck()
         self.board : Board = Board()
@@ -109,7 +110,7 @@ class Game():
                 self.players[i].set_role("bb")
             else: 
                 self.players[i].set_role("other")
-            player.reset_amount_bet_this_hand()
+            player.reset_bet_total()
 
         ## all our work is done on active players
         self.active_players = copy.deepcopy(self.players)
@@ -140,10 +141,11 @@ class Game():
     def get_players_to_call(self) -> int:
         '''
         Returns the number of players to call.
+        Since this is used after a raise, isnt it just active players - 1?
         '''
         count : int = 0
         for player in self.active_players:
-            if player.get_current_bet() != self.pot.get_state()['call_total']:
+            if player.get_bet_total() != self.pot.get_state()['call_total']:
                 count += 1
         return count
 
@@ -156,29 +158,33 @@ class Game():
         self.initialize_game_state(board_stage)
         self.initialize_players_state()
 
-        # active_players :int = len(self.active_players)
-        # players_to_call:int = len(self.active_players)-1 # bb does not necessarily need to callt
 
-        while self.get_players_to_call() > 0:
+        j = 0
+        lim = len(self.active_players)
+        while j < lim:
+            i = j%len(self.active_players)
             # # print("-----------STARTING LOOP-----------")
             # print(f"players_to_call: {players_to_call}")
             # print(f"self.active_players: {self.active_players}")
-            for i, player in enumerate(self.active_players):
-                print("------------ NEW PLAYER ------------")
-                print(f"player state: {player.get_state()}")
-                if player.get_betting_status() == "active":
-                    state : GameState = self.get_state()
-                    # NOW) players makes bet using game state information 
-                    response : Optional[PlayerBetResponse] = await player.make_bet(state)
+            # for i, player in enumerate(self.active_players):
+            print("------------ NEW PLAYER ------------")
+            print(f"player state: {self.active_players[i].get_state()}")
+            if self.active_players[i].get_betting_status() == "active":
+                state : GameState = self.get_state()
+                # NOW) players makes bet using game state information 
+                response : Optional[PlayerBetResponse] = await self.active_players[i].make_bet(state)
 
-                    # NOW) persist betting record for player. 
-                    self.persist_player_action(response, state, player.get_state())
-                    # NOW) we need a function which updates the list of players if they have gone all-in or folded
-                    self.update_active_players(player, response['action']) 
-                    
-                    # NOW) THEN WE UPDATE pot state with player response. this way we store the pot_state at the time before the player makes his move
-                    self.pot.update_pot_state(last_player=player, last_action=response, next_player=self.active_players[(i+1)%len(self.active_players)])
+                # NOW) persist betting record for player. 
+                self.persist_player_action(response, state, self.active_players[i].get_state())
+                # NOW) we need a function which updates the list of players if they have gone all-in or folded
+                last_action = response['action']
+                if last_action == "raise":
+                    lim += self.get_players_to_call()
+                # NOW) THEN WE UPDATE pot state with player response. this way we store the pot_state at the time before the player makes his move
+                self.pot.update_pot_state(last_player=self.active_players[i], last_action=response, next_player=self.active_players[(i+1)%len(self.active_players)])
+                self.update_active_players(self.active_players[i], last_action) 
 
+            j += 1
         self.persist_betting_round()
         self.update_player_turns()  ## needs to go before initialize_players state
         await asyncio.sleep(0.1)  ## might be necessary until we have the calls

@@ -51,10 +51,10 @@ class Pot():
         self.pot_state['pot_size'] += last_action['amount_bet']
 
         if last_action['action'] == 'raise':
-            self.pot_state['call_total'] = last_player.get_current_bet()
+            self.pot_state['call_total'] = last_player.get_bet_total()
             self.pot_state['minimum_raise'] = 2*last_action['amount_bet']
 
-        if next_player.get_current_bet() == self.pot_state['call_total']:
+        if next_player.get_bet_total() == self.pot_state['call_total']:
             self.pot_state['check_allowed'] = True
         else:
             self.pot_state['check_allowed'] = False
