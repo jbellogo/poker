@@ -47,14 +47,14 @@ class Pot():
     def collect_blinds(self, sb_amount : int):
         self.pot_state['pot_size'] += 3*sb_amount
     
-    def update_pot_state(self, last_player: Player, last_action : PlayerBetResponse, next_player : Player) -> None:
+    def update_pot_state(self, last_action : PlayerBetResponse, last_player_total: int, next_player_total : int) -> None:
         self.pot_state['pot_size'] += last_action['amount_bet']
 
-        if last_action['action'] == 'raise':
-            self.pot_state['call_total'] = last_player.get_bet_total()
+        if last_action['action'] == 'raise' or last_action['action'] == 'all-in':
+            self.pot_state['call_total'] = last_player_total
             self.pot_state['minimum_raise'] = 2*last_action['amount_bet']
 
-        if next_player.get_bet_total() == self.pot_state['call_total']:
+        if next_player_total == self.pot_state['call_total']:
             self.pot_state['check_allowed'] = True
         else:
             self.pot_state['check_allowed'] = False

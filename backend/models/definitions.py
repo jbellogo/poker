@@ -57,7 +57,7 @@ class BoardStage(str, Enum):
     RIVER = 'RIVER'
         
 class PotState(TypedDict):
-    call_total : int   # call_amount changes from player to player, so it is set in Player class. 
+    call_total : int   # call_amount changes from player to player, so it is set
     check_allowed : bool
     minimum_raise : int
     pot_size : int
@@ -76,7 +76,6 @@ class GameState(TypedDict):
 
 class PlayerStatus(str, Enum):
     ACTIVE = 'active'
-    INACTIVE = 'inactive' # will have 10 players created, corresponding to 10 reserved seats but they only become active when someone joins a session.
     ALLIN = 'all-in'
     FOLDED = 'fold'
 

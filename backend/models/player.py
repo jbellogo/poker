@@ -15,10 +15,10 @@ class Player(Entity):
 
     ## internal
     role : PlayerRole = "other"  # @TODO update them every round
-    betting_status : PlayerStatus = "active" ## carefull with this. 
     last_action : PlayerAction = "no-action"
     current_bet : int = 0
     bet_total : int = 0
+    betting_status : PlayerStatus = "active"
 
     # private info
     cards : List[Card] = []
@@ -35,12 +35,6 @@ class Player(Entity):
     def set_role(self, role: PlayerRole)->None:
         self.role = role
     
-    def set_status(self, new_status : PlayerStatus)->None:
-        self.betting_status = new_status
-
-    def get_betting_status(self):
-        return self.betting_status
-
     def get_id(self) -> int:
         return self.pid
     
@@ -52,6 +46,9 @@ class Player(Entity):
         
     def get_bet_total(self)->int:
         return self.bet_total
+    
+    def get_betting_status(self) -> PlayerStatus:
+        return self.betting_status
     
     def reset_bet_total(self):
         self.bet_total = 0
@@ -75,8 +72,8 @@ class Player(Entity):
                 "role": self.role,
                 "last_action": self.last_action,
                 "current_bet": self.current_bet,
+                "betting_status": self.betting_status,
                 "bet_total": self.bet_total,
-                "betting_status": self.betting_status
             },
             "private_info": {
                 "cards": self.cards
@@ -124,9 +121,9 @@ class Player(Entity):
         response = self.validate_response(response, game_state)
         # update local player records with response. 
         self.funds -= response['amount_bet']
-        self.betting_status = PlayerAction(response['action']).to_status()  ## this one is iffy
         self.bet_total += response['amount_bet']
         self.current_bet = response['amount_bet']
         self.last_action = response['action']
+        self.betting_status = PlayerAction(response['action']).to_status()  ## this one is iffy
         return response
 
