@@ -7,6 +7,11 @@ import pytest_asyncio
 
 
 async def get_hand_history(game_fix, monkeypatch, actions):
+    '''
+    takes in actions in form of [{'sid' : '3', 'amount_bet' : 40, 'action' : "call"},...]
+    mocks the request_betting_response method for the Player class with the actions
+    returns the hand history for the PREFLOP stage
+    '''
     test_mock = AsyncMock(side_effect=actions)
     monkeypatch.setattr(Player, "request_betting_response", test_mock)
     await game_fix.betting_round(board_stage="PREFLOP")
@@ -24,8 +29,7 @@ async def test_player_make_bet(monkeypatch, player_list_fix, game_state_preflop_
             'action' : "call"
         } for player in player_list_fix]    
     
-    test_mock = AsyncMock(side_effect=actions)
-    monkeypatch.setattr(Player, "request_betting_response", test_mock)
+    monkeypatch.setattr(Player, "request_betting_response", AsyncMock(side_effect=actions))
 
     for i, player in enumerate(player_list_fix):
         old_funds = player.funds
@@ -187,6 +191,31 @@ async def test_betting_round_4(monkeypatch, game_fix):
 
 
 
+
+
+@pytest.mark.asyncio
+async def test_betting_round_5(monkeypatch, game_fix):
+    '''
+    Situation: pre-flop stage, several raises. 
+    '''
+    # previous actions: P1 sb pays 20, P2 bb pays 40, P3 other starts action
+    actions = [
+        {'sid' : '3', 'amount_bet' : 100, 'action' : "raise"},  # call total 100
+        {'sid' : '1', 'amount_bet' : 200, 'action' : "raise"},  # call total 220
+        {'sid' : '2', 'amount_bet' : 400, 'action' : "raise"},  # call total 440
+        {'sid' : '3', 'amount_bet' : 340, 'action' : "call"},
+        {'sid' : '1', 'amount_bet' : 220, 'action' : "call"},  
+    ]
+    # with fold and call you should not have to specify, maybe we can worry about that in the frontend
+    hand_history = await get_hand_history(game_fix, monkeypatch, actions)
+    # pprint.pprint(hand_history)
+    assert(len(hand_history)==5)
+
+    assert(hand_history[0]['game_state']['pot'] == {"call_total" : 40, "check_allowed" : False,"minimum_raise" : 80,"pot_size" : 60})
+    assert(hand_history[1]['game_state']['pot'] == {"call_total" : 100, "check_allowed" : False,"minimum_raise" : 200,"pot_size" : 160})
+    assert(hand_history[2]['game_state']['pot'] == {"call_total" : 220, "check_allowed" : False,"minimum_raise" : 400,"pot_size" : 360})
+    assert(hand_history[3]['game_state']['pot'] == {"call_total" : 440, "check_allowed" : False,"minimum_raise" : 800,"pot_size" : 760})
+    assert(hand_history[4]['game_state']['pot'] == {"call_total" : 440, "check_allowed" : False,"minimum_raise" : 800,"pot_size" : 1100})
 
 
 
