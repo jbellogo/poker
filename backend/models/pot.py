@@ -54,7 +54,7 @@ class Pot():
             self.pot_state['call_total'] = last_player_total
             self.pot_state['minimum_raise'] = 2*last_action['amount_bet']
 
-        print(f"next_player_total: {next_player_total} =? call_total: {self.pot_state['call_total']}")
+        # print(f"next_player_total: {next_player_total} =? call_total: {self.pot_state['call_total']}")
         if next_player_total == self.pot_state['call_total']:
             self.pot_state['check_allowed'] = True
         else:

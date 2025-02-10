@@ -96,10 +96,9 @@ class Game():
         # collect blinds
         self.pot.collect_blinds(self.sb_amount)
 
-        # @TODO NOOOOO, just want it to start at player #3, 
-        # find a way to do this without mutating the players list.
-        # self.update_player_turns()
-        # self.update_player_turns()
+        # start at player #3
+        self.update_player_turns()
+        self.update_player_turns()
 
 
 
@@ -130,20 +129,24 @@ class Game():
         Returns the number of players to call.
         Since this is used after a raise, isnt it just active players - 1?
         '''
-        count : int = 0
+        # count : int = 0
+        players = []
         for player in self.players:
             if player.get_betting_status() == "active":
+                # print(f"player {player.get_id()} bet total: {player.get_bet_total()} ==? {self.pot.get_state()['call_total']}")
                 if player.get_bet_total() != self.pot.get_state()['call_total']:
-                    count += 1
-        return count
+                    players.append(player)
+        return players
     
 
-    def update_lim(self, turn : int, lim : int, last_action : PlayerAction) -> int:
-        additional_turns = 0
-        if last_action == "raise" or last_action == "all-in":
-            additional_turns = self.get_players_to_call()
-            return turn + additional_turns + 1
-        return lim # the original number of turns
+    # def update_lim(self, turn : int, lim : int, last_action : PlayerAction) -> int:
+    #     additional_turns = 0
+    #     if last_action == "raise" or last_action == "all-in":
+    #         additional_turns = self.get_players_to_call()
+    #         return turn + additional_turns + 1
+    #     # elif last_action == "fold":
+    #     #     return lim + 1
+    #     return lim # the original number of turns
 
 
 
@@ -154,27 +157,32 @@ class Game():
         Updates player status from action response, ie all-in, folded, etc.
         '''
         self.initialize_betting_round(board_stage)
+        # print(f"\n---------STARTING BETTING ROUND {board_stage}")
+        players_to_call = [player for player in self.players if player.get_betting_status() == "active"]
+        # set turn order
 
-        turn = 2
-        lim = len(self.players)+2
-        while turn < lim:
+        # print(f"players_to_call: {[player.get_id() for player in players_to_call]}")
+        while True:
+            if len(players_to_call) == 0:
+                break
+
             # print(f"pot state: {self.pot.get_state()}")
-            i = turn%len(self.players)
+            for i, player in enumerate(players_to_call):
+                # print(f"\nplayer {player.get_id()} status: {player.get_betting_status()}")
 
-            # get player action
-            state : GameState = self.get_state()
-            response : Optional[PlayerBetResponse] = await self.players[i].make_bet(state)
-            self.persist_player_action(response, state, self.players[i].get_state())
+                # get player action
+                state : GameState = self.get_state()
+                response : Optional[PlayerBetResponse] = await player.make_bet(state)
+                self.persist_player_action(response, state, player.get_state())
 
-            # update pot state
-            last_action = response['action']
-            last_player_total = self.players[i].get_bet_total()
-            next_player_total = self.players[(i+1)%len(self.players)].get_bet_total()
-            self.pot.update_pot_state(last_action=response, last_player_total=last_player_total, next_player_total=next_player_total)
+                # update pot state
+                last_action = response['action']
+                # print(f" --- action: {last_action}")
+                last_player_total = player.get_bet_total()
+                next_player_total = players_to_call[(i+1)%len(players_to_call)].get_bet_total()
+                self.pot.update_pot_state(last_action=response, last_player_total=last_player_total, next_player_total=next_player_total)
+            players_to_call = self.get_players_to_call()
             
-            # update turn
-            lim = self.update_lim(turn, lim, last_action)
-            turn += 1
         self.persist_betting_round()
         await asyncio.sleep(0.1)  ## might be necessary until we have the calls
 

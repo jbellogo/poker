@@ -1,3 +1,9 @@
+##################################################################################
+##################################################################################
+#### PREFLOP TESTS
+##################################################################################
+##################################################################################
+
 import pytest
 from models import *
 from unittest.mock import AsyncMock
@@ -28,11 +34,6 @@ async def test_player_make_bet(monkeypatch, player_list_fix, game_fix):
         assert player.current_bet == actions[i]['amount_bet']
         assert old_funds - player.funds == actions[i]['amount_bet']
 
-##################################################################################
-##################################################################################
-#### PREFLOP TESTS
-##################################################################################
-##################################################################################
 
 @pytest.mark.asyncio
 async def test_betting_round_1(monkeypatch, game_fix):
@@ -40,7 +41,7 @@ async def test_betting_round_1(monkeypatch, game_fix):
     Situation: All players call the big blind
     game_fix num_players=3 and sb_amount=20
     '''
-    assert [player.get_id() for player in game_fix.players] == [1,2,3]
+    assert [player.get_id() for player in game_fix.players] == [3,1,2]
 
     actions = [
         {'sid' : '3', 'amount_bet' : 40, 'action' : "call"},
