@@ -48,8 +48,7 @@ class Game():
         effectively updating the sb_index.
         sb_index remains 0 throughout.
         '''
-        # @TODO this will give us problems in keeping blinds across hand cycles.
-        self.players.append(self.players.pop(0)) # one at a time.
+        self.players.append(self.players.pop(0))
 
 
     def persist_player_action(self, response: PlayerBetResponse, game_state: GameState, player_state: PlayerState) -> None:        
@@ -69,7 +68,6 @@ class Game():
 
     def persist_betting_round(self):
         pass
-
 
     def initialize_hand(self):
         '''
@@ -106,7 +104,6 @@ class Game():
         '''
         initialize pot and board.
         '''
-        # some of this shuold be done once per hand, some of this once per betting round.
         self.pot.initialize(board_stage)
         self.board.set_stage(board_stage)
         self.deck.deal_cards(self.board)
@@ -237,7 +234,10 @@ class Game():
         pass
 
     def determine_winner(self):
-        pass
+        # use the list of players and the board cards to determine the winner.
+        for player in self.players:
+            get_best_hand(player.get_cards() + self.board.get_cards())
+        
 
         
        

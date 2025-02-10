@@ -21,6 +21,7 @@ class Suit(str, Enum):
         return list(map(lambda c: c.value, cls))
     
 class Rank(IntEnum):
+    ACE_LOW = 1
     TWO = 2
     THREE = 3
     FOUR = 4
@@ -44,7 +45,24 @@ class Card(BaseModel):
     rank: Rank  
 
     def __str__(self) -> str:
-        return f"{self.rank}{self.suit}"
+        return f"{self.rank.name}_{self.suit.name}"
+    
+    def __repr__(self) -> str:
+        return self.__str__()
+    
+
+class HandRankings(IntEnum):
+    ROYAL_FLUSH = 1
+    STRAIGHT_FLUSH = 2
+    FOUR_OF_A_KIND = 3
+    FULL_HOUSE = 4
+    FLUSH = 5
+    STRAIGHT = 6
+    THREE_OF_A_KIND = 7
+    TWO_PAIR = 8
+    PAIR = 9
+    HIGH_CARD = 10
+    
     
 ##############################################################################
 ######## BETTING
