@@ -60,38 +60,44 @@ def hand_fix():
     return [Card(suit=Suit.HEARTS, rank=Rank.TWO), Card(suit=Suit.HEARTS, rank=Rank.THREE)]
 
 
+# These are similar fixtures, but differnt preflop actions
 @pytest_asyncio.fixture
-async def game_fix_flop_basic(monkeypatch, player_list_fix):
-    game = Game(sb_amount=_TESTING_SB_AMOUNT,
-                initial_player_funds=_TESTING_INITIAL_PLAYER_FUNDS)
-    for player in player_list_fix:
-        game.add_player(player.sid, player.name)
-    game.initialize_hand() # after adding players @TODO add some guards/lobby, game is not initialized until players > 2
+async def game_fix_flop_basic(monkeypatch, game_fix):
     preflop_actions = [
         {'sid' : '3', 'amount_bet' : 40, 'action' : "call"},
         {'sid' : '1', 'amount_bet' : 20, 'action' : "call"},
         {'sid' : '2', 'amount_bet' : 0, 'action' : "check"},
     ]
     monkeypatch.setattr(Player, "request_betting_response", AsyncMock(side_effect=preflop_actions))
-    await game.betting_round("PREFLOP")
-    yield game
+    await game_fix.betting_round("PREFLOP")
+    yield game_fix
 
 
 @pytest_asyncio.fixture
-async def game_fix_flop_fold(monkeypatch, player_list_fix):
-    game = Game(sb_amount=_TESTING_SB_AMOUNT,
-                initial_player_funds=_TESTING_INITIAL_PLAYER_FUNDS)
-    for player in player_list_fix:
-        game.add_player(player.sid, player.name)
-    game.initialize_hand() # after adding players @TODO add some guards/lobby, game is not initialized until players > 2
+async def game_fix_flop_fold(monkeypatch, game_fix):
+    
     preflop_actions = [
         {'sid' : '3', 'amount_bet' : 40, 'action' : "call"},
         {'sid' : '1', 'amount_bet' : 20, 'action' : "call"},
         {'sid' : '2', 'amount_bet' : 0, 'action' : "fold"},
     ]
     monkeypatch.setattr(Player, "request_betting_response", AsyncMock(side_effect=preflop_actions))
-    await game.betting_round("PREFLOP")
-    yield game
+    await game_fix.betting_round("PREFLOP")
+    yield game_fix
+
+
+@pytest_asyncio.fixture
+async def game_fix_flop_allin(monkeypatch, game_fix):
+    
+    preflop_actions = [
+        {'sid' : '3', 'amount_bet' : 40, 'action' : "call"},
+        {'sid' : '1', 'amount_bet' : 980, 'action' : "all-in"},
+        {'sid' : '2', 'amount_bet' : 0, 'action' : "fold"},
+        {'sid' : '3', 'amount_bet' : 960, 'action' : "all-in"},
+    ]
+    monkeypatch.setattr(Player, "request_betting_response", AsyncMock(side_effect=preflop_actions))
+    await game_fix.betting_round("PREFLOP")
+    yield game_fix
 
 
 

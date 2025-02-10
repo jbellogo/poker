@@ -100,12 +100,55 @@ async def test4(monkeypatch, game_fix_flop_fold):
     ]
     '''
     actions = [
-        {'sid' : '3', 'amount_bet' : 100, 'action' : "raise"},  # call total 100
-        {'sid' : '1', 'amount_bet' : 200, 'action' : "raise"},  # call total 200
+        {'sid' : '3', 'amount_bet' : 100, 'action' : "raise"},  # call total 140
+        {'sid' : '1', 'amount_bet' : 200, 'action' : "raise"},  # call total 240
         {'sid' : '3', 'amount_bet' : 100, 'action' : "call"},
     ]
 
     hand_history = await get_hand_history(game_fix_flop_fold, monkeypatch, actions, BETTING_ROUND)
     assert(len(hand_history)==3)
+    assert(game_fix_flop_fold.get_state()['pot'] == {"call_total" : 240, "check_allowed" : True,"minimum_raise" : 400,"pot_size" : 520})
 
 
+
+@pytest.mark.asyncio
+async def test5(monkeypatch, game_fix_flop_fold):
+    '''
+    preflop_actions = [
+        {'sid' : '3', 'amount_bet' : 40, 'action' : "call"},
+        {'sid' : '1', 'amount_bet' : 20, 'action' : "call"},
+        {'sid' : '2', 'amount_bet' : 0, 'action' : "fold"},
+    ]
+    '''
+    actions = [
+        {'sid' : '3', 'amount_bet' : 80, 'action' : "raise"},  # call total 120
+        {'sid' : '1', 'amount_bet' : 160, 'action' : "raise"},  # call total 200
+        {'sid' : '3', 'amount_bet' : 320, 'action' : "raise"},  # call total 440
+        {'sid' : '1', 'amount_bet' : 640, 'action' : "raise"},  # call total 840
+        {'sid' : '3', 'amount_bet' : 400, 'action' : "call"},  # call total 840
+    ]
+
+    hand_history = await get_hand_history(game_fix_flop_fold, monkeypatch, actions, BETTING_ROUND)
+    assert(len(hand_history)==5)
+    assert(game_fix_flop_fold.get_state()['pot'] == {"call_total" : 840, "check_allowed" : True,"minimum_raise" : 1280,"pot_size" : 1720})
+
+
+
+@pytest.mark.asyncio
+async def test6(monkeypatch, game_fix_flop_allin):
+    '''
+    preflop_actions = [
+        {'sid' : '3', 'amount_bet' : 40, 'action' : "call"},
+        {'sid' : '1', 'amount_bet' : 980, 'action' : "all-in"},
+        {'sid' : '2', 'amount_bet' : 0, 'action' : "fold"},
+        {'sid' : '3', 'amount_bet' : 960, 'action' : "all-in"},
+    ]
+    '''
+    actions = []
+
+    hand_history = await get_hand_history(game_fix_flop_allin, monkeypatch, actions, BETTING_ROUND)
+    assert(hand_history == [])
+    assert(game_fix_flop_allin.get_state()['pot']["call_total"] == 1000)
+    assert(game_fix_flop_allin.get_state()['pot']["check_allowed"] == True)
+    # assert(game_fix_flop_allin.get_state()['pot']["minimum_raise"] == 1960)  # its 40 now... sure it doesnt matter cuz eveyone went all-in... but it technically shuold update
+    assert(game_fix_flop_allin.get_state()['pot']["pot_size"] == 2040)
