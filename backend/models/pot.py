@@ -40,9 +40,6 @@ class Pot():
             'minimum_raise' : 2*self.bb_amount,
             'pot_size' : pot_size # preserve it across betting rounds, may be null
         }
-        # if board_stage != "PREFLOP":
-        #     # struct['call_total'] = 0
-        #     struct['check_allowed'] = True
         self.pot_state = PotState(**struct)
 
     def collect_blinds(self, sb_amount : int):

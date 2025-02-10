@@ -11,23 +11,13 @@ class Board(Entity):
     def __str__(self) -> str:
         return super().__str__()
     
-    # def current_stage(self) -> BoardStage:
-    #     return self.stage
+    # def _set_state(self, state : BoardState):
+    #     self.stage = state['stage']
+    #     self.cards = state['cards']
 
-    # def next_stage(self) -> bool:
-    #     indicator = self.stage < BoardStage.RIVER
-    #     if indicator:
-    #         self.stage +=1
-        
-    #     return indicator
-    def _set_state(self, state : BoardState):
-        self.stage = state['stage']
-        self.cards = state['cards']
-
-    def initialize(self, stage : BoardStage, deck : Deck):
+    def set_stage(self, stage : BoardStage):
         '''Sets the stage and deals the cards.'''
         self.stage = stage
-        deck.deal_cards(self)
 
 
     def show(self)->None:

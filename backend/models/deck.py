@@ -6,10 +6,10 @@ import random
 class Deck(Entity):
     def __init__(self):
         super().__init__()
-        self.initialize_deck()
+        self.initialize()
         self.shuffle()
 
-    def initialize_deck(self):
+    def initialize(self):
         for suit in Suit.list():
             for rank in Rank.list():
                 card = Card(suit=suit, rank=rank)
@@ -26,8 +26,8 @@ class Deck(Entity):
         Removed cards returned for testing
         '''
         cards = []
-        for i in range(0, entity._cards_dealt()):
-            card = self.cards.pop()
+        for _ in range(0, entity._cards_dealt()):
+            card = self.cards.pop(0)
             entity.add_card(card)    
             cards.append(card)   
         return cards

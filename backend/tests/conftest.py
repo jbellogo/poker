@@ -33,7 +33,9 @@ def deck_fix():
     
 @pytest.fixture
 def board_fix():
-    return Board()
+    board =  Board()
+    board.initialize("PREFLOP", deck_fix())
+    return board
 
 @pytest.fixture
 def player_list_fix():

@@ -104,13 +104,13 @@ class Game():
 
     def initialize_betting_round(self, board_stage : BoardStage):
         '''
-        resetting their amount bet this hand to 0.
+        initialize pot and board.
         '''
         # some of this shuold be done once per hand, some of this once per betting round.
         self.pot.initialize(board_stage)
-        self.board.initialize(board_stage, self.deck)
-        # for player in self.players:
-        #     player.reset_bet_total()  # this is initializing blinds.
+        self.board.set_stage(board_stage)
+        self.deck.deal_cards(self.board)
+
 
 
 
