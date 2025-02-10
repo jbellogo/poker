@@ -4,23 +4,13 @@ from unittest.mock import AsyncMock
 import pprint
 import asyncio
 import pytest_asyncio
+from tests.conftest import get_hand_history
 
-
-async def get_hand_history(game_fix, monkeypatch, actions):
-    '''
-    takes in actions in form of [{'sid' : '3', 'amount_bet' : 40, 'action' : "call"},...]
-    mocks the request_betting_response method for the Player class with the actions
-    returns the hand history for the PREFLOP stage
-    '''
-    test_mock = AsyncMock(side_effect=actions)
-    monkeypatch.setattr(Player, "request_betting_response", test_mock)
-    await game_fix.betting_round(board_stage="PREFLOP")
-    hand_history = game_fix.get_hand_history()['PREFLOP']
-    return hand_history
+BETTING_ROUND = "PREFLOP"
 
 
 @pytest.mark.asyncio
-async def test_player_make_bet(monkeypatch, player_list_fix, game_state_preflop_fix):
+async def test_player_make_bet(monkeypatch, player_list_fix, game_fix):
     
     actions = [
         {
@@ -33,7 +23,7 @@ async def test_player_make_bet(monkeypatch, player_list_fix, game_state_preflop_
 
     for i, player in enumerate(player_list_fix):
         old_funds = player.funds
-        response = await player.make_bet(game_state_preflop_fix)
+        response = await player.make_bet(game_fix.get_state())
         assert response == actions[i]
         assert player.current_bet == actions[i]['amount_bet']
         assert old_funds - player.funds == actions[i]['amount_bet']
@@ -58,7 +48,7 @@ async def test_betting_round_1(monkeypatch, game_fix):
         {'sid' : '2', 'amount_bet' : 0, 'action' : "check"},
     ]
 
-    hand_history = await get_hand_history(game_fix, monkeypatch, actions)
+    hand_history = await get_hand_history(game_fix, monkeypatch, actions, BETTING_ROUND)
 
     assert(len(hand_history)==3) # only three bets all call.
 
@@ -86,7 +76,7 @@ async def test_betting_round_2(monkeypatch, game_fix):
         {'sid' : '3', 'amount_bet' : 60, 'action' : "call"} # P3 total 100
     ]
 
-    hand_history = await get_hand_history(game_fix, monkeypatch, actions)
+    hand_history = await get_hand_history(game_fix, monkeypatch, actions, BETTING_ROUND)
 
     assert(len(hand_history)==4)
     # P3 saw this bellow and called 40
@@ -135,7 +125,7 @@ async def test_betting_round3(monkeypatch, game_fix):
         {'sid' : '2', 'amount_bet' : 0, 'action' : "fold"},
     ]
 
-    hand_history = await get_hand_history(game_fix, monkeypatch, actions)
+    hand_history = await get_hand_history(game_fix, monkeypatch, actions, BETTING_ROUND)
 
     # pprint.pp(hand_history)
     assert(len(hand_history)==3)
@@ -161,7 +151,7 @@ async def test_betting_round_4(monkeypatch, game_fix):
 
     ]
     # with fold and call you should not have to specify, maybe we can worry about that in the frontend
-    hand_history = await get_hand_history(game_fix, monkeypatch, actions)
+    hand_history = await get_hand_history(game_fix, monkeypatch, actions, BETTING_ROUND)
     # pprint.pprint(hand_history)
     assert(len(hand_history)==5)
 
@@ -207,7 +197,7 @@ async def test_betting_round_5(monkeypatch, game_fix):
         {'sid' : '1', 'amount_bet' : 220, 'action' : "call"},  
     ]
     # with fold and call you should not have to specify, maybe we can worry about that in the frontend
-    hand_history = await get_hand_history(game_fix, monkeypatch, actions)
+    hand_history = await get_hand_history(game_fix, monkeypatch, actions, BETTING_ROUND)
     # pprint.pprint(hand_history)
     assert(len(hand_history)==5)
 

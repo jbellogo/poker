@@ -1,11 +1,64 @@
+import pytest
+from tests.conftest import get_hand_history
+from models import *
+import pprint
+
 ##################################################################################
 ##################################################################################
 #### FLOP TESTS
 ##################################################################################
 ##################################################################################
 
+## The actions don't matter, just the state of the game after the preflop round
+PREFLOP_STATE = {
+    'pot': {
+        'call_total': 40, 
+        'check_allowed': True, 
+        'minimum_raise': 80, 
+        'pot_size': 120}, 
+    'board': {
+        'stage': 'PREFLOP', 
+        'cards': []}
+}
+
+def test_override_game_state(game_fix):
+    game_fix._override_game_state(PREFLOP_STATE)
+    state = game_fix.get_state()
+    assert(state == PREFLOP_STATE)
+
+
+## test the transition from preflop to flop
+@pytest.mark.asyncio
+async def test_transition_into_flop(monkeypatch, game_fix):
+    preflop_actions = [
+        {'sid' : '3', 'amount_bet' : 40, 'action' : "call"},
+        {'sid' : '1', 'amount_bet' : 20, 'action' : "call"},
+        {'sid' : '2', 'amount_bet' : 0, 'action' : "check"},
+    ]
+    preflop_hand_history = await get_hand_history(game_fix, monkeypatch, preflop_actions, "PREFLOP")
+    state = game_fix.get_state()
+    assert(state == PREFLOP_STATE)
+
+    flop_actions = [
+        {'sid' : '3', 'amount_bet' : 0, 'action' : "check"},
+        {'sid' : '1', 'amount_bet' : 0, 'action' : "check"},
+        {'sid' : '2', 'amount_bet' : 0, 'action' : "check"},
+    ]
+    flop_hand_history = await get_hand_history(game_fix, monkeypatch, flop_actions, "FLOP")
+    state = game_fix.get_state()
+    # pprint.pprint(state)
+    assert(len(flop_hand_history) == 3)
+    assert(state['board']['stage'] == 'FLOP')
+    assert(len(state['board']['cards']) == 3)
+    # call_total now builds up across betting rounds.
+    assert(state['pot'] == {'call_total': 40, 'check_allowed': True, 'minimum_raise': 80, 'pot_size': 120})
+
+
+
+
 # @pytest.mark.asyncio
-# async def test_betting_round3(monkeypatch, game_fix):
+# async def test_betting_round3(monkeypatch, game_fix, game_state_flop_fix):
+#     game_fix._override_game_state = game_state_flop_fix
 #     '''
 #     Situation: flop stage, check allowed, multiple raises. 
 #     '''

@@ -8,6 +8,7 @@ from models import *
 import asyncio
 import pytest_asyncio
 import socketio
+from unittest.mock import AsyncMock
 
 from models.config import * # Global variables, better practice to use json.
 
@@ -45,24 +46,14 @@ def player_list_fix():
     return players
 
 
-# @pytest.fixture
-# def server_fix():
-#     return sio
-
 @pytest.fixture
 def game_fix(player_list_fix):
-    # sio = socketio.Server(cors_allowed_origins='*')
-    # app = socketio.WSGIApp(sio)
-
     game = Game(sb_amount=_TESTING_SB_AMOUNT,
                 initial_player_funds=_TESTING_INITIAL_PLAYER_FUNDS)
     for player in player_list_fix:
         game.add_player(player.sid, player.name)
-    
-    return game  # Use yield instead of return
-    # Cleanup after the test
-    # sio.disconnect()  # Disconnect all clients
-    # sio.stop()
+    game.initialize_hand() # after adding players @TODO add some guards/lobby, game is not initialized until players > 2
+    return game
 
 @pytest.fixture
 def hand_fix():
@@ -70,7 +61,23 @@ def hand_fix():
 
 
 @pytest.fixture
-def game_state_preflop_fix():
-    pot = PotState(call_total=40, check_allowed=False, minimum_raise=80, pot_size=0)
-    board = BoardState(cards=[], stage=BoardStage.PREFLOP)
-    return GameState(pot=pot, board=board)
+def game_fix_flop(game_fix):
+    pot = PotState(call_total=0, check_allowed=True, minimum_raise=80, pot_size=500)
+    board = BoardState(cards=[], stage="FLOP")
+    state = GameState(pot=pot, board=board)
+    game_fix._override_game_state(state)
+    return game_fix
+
+
+async def get_hand_history(game_fix, monkeypatch, actions, board_stage : BoardStage):
+    '''
+    takes in actions in form of [{'sid' : '3', 'amount_bet' : 40, 'action' : "call"},...]
+    mocks the request_betting_response method for the Player class with the actions
+    returns the hand history for the PREFLOP stage
+    '''
+    assert(board_stage in ["PREFLOP", "FLOP", "TURN", "RIVER"])
+    test_mock = AsyncMock(side_effect=actions)
+    monkeypatch.setattr(Player, "request_betting_response", test_mock)
+    await game_fix.betting_round(board_stage)
+    hand_history = game_fix.get_hand_history()[board_stage]
+    return hand_history

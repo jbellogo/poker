@@ -3,13 +3,13 @@ from uuid import UUID
 from models.definitions import *
 import pprint
 
+## There is no way to set the board stage for now
 
 
 class Pot():
     '''
-    Saves betting history in a single hand.
-    awaits responses in methods betting_round()
-    Gets Updated after every single player action. how would MVC design work?
+    Contains betting state/rules.
+    Gets Updated after every single player action.
     {
         "call_total" : 100,   # needs to match each player's current bet.
         "check_allowed" : False,
@@ -31,17 +31,18 @@ class Pot():
         return self.pot_state.copy()
     
 
-    def initialize(self, board_stage:BoardStage):
+    def initialize(self, board_stage : BoardStage):
+        pot_size = self.pot_state['pot_size'] if self.pot_state else 0
+        call_total = self.pot_state['call_total'] if self.pot_state else self.bb_amount
         struct = {
-            'call_total' : self.bb_amount,
-            'check_allowed' : False,
+            'call_total' : call_total,
+            'check_allowed' : board_stage != "PREFLOP",
             'minimum_raise' : 2*self.bb_amount,
-            'pot_size' : 0
+            'pot_size' : pot_size # preserve it across betting rounds, may be null
         }
-        if board_stage == "PREFLOP":
-            struct['check_allowed'] = False
-        else:
-            struct['check_allowed'] = True
+        # if board_stage != "PREFLOP":
+        #     # struct['call_total'] = 0
+        #     struct['check_allowed'] = True
         self.pot_state = PotState(**struct)
 
     def collect_blinds(self, sb_amount : int):
@@ -49,7 +50,6 @@ class Pot():
     
     def update_pot_state(self, last_action : PlayerBetResponse, last_player_total: int, next_player_total : int) -> None:
         self.pot_state['pot_size'] += last_action['amount_bet']
-
         if last_action['action'] == 'raise' or last_action['action'] == 'all-in':
             self.pot_state['call_total'] = last_player_total
             self.pot_state['minimum_raise'] = 2*last_action['amount_bet']
@@ -60,5 +60,5 @@ class Pot():
             self.pot_state['check_allowed'] = False
 
 
-    def overwrite_state(self, new_pot_state : PotState):
+    def _set_state(self, new_pot_state : PotState):
         self.pot_state = new_pot_state
