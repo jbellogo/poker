@@ -60,13 +60,21 @@ def hand_fix():
     return [Card(suit=Suit.HEARTS, rank=Rank.TWO), Card(suit=Suit.HEARTS, rank=Rank.THREE)]
 
 
-@pytest.fixture
-def game_fix_flop(game_fix):
-    pot = PotState(call_total=0, check_allowed=True, minimum_raise=80, pot_size=500)
-    board = BoardState(cards=[], stage="FLOP")
-    state = GameState(pot=pot, board=board)
-    game_fix._override_game_state(state)
-    return game_fix
+@pytest_asyncio.fixture
+async def game_fix_flop(monkeypatch, player_list_fix):
+    game = Game(sb_amount=_TESTING_SB_AMOUNT,
+                initial_player_funds=_TESTING_INITIAL_PLAYER_FUNDS)
+    for player in player_list_fix:
+        game.add_player(player.sid, player.name)
+    game.initialize_hand() # after adding players @TODO add some guards/lobby, game is not initialized until players > 2
+    preflop_actions = [
+        {'sid' : '3', 'amount_bet' : 40, 'action' : "call"},
+        {'sid' : '1', 'amount_bet' : 20, 'action' : "call"},
+        {'sid' : '2', 'amount_bet' : 0, 'action' : "check"},
+    ]
+    monkeypatch.setattr(Player, "request_betting_response", AsyncMock(side_effect=preflop_actions))
+    await game.betting_round("PREFLOP")
+    yield game
 
 
 async def get_hand_history(game_fix, monkeypatch, actions, board_stage : BoardStage):

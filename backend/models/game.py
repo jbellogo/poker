@@ -158,6 +158,7 @@ class Game():
         turn = 2
         lim = len(self.players)+2
         while turn < lim:
+            # print(f"pot state: {self.pot.get_state()}")
             i = turn%len(self.players)
 
             # get player action
@@ -223,10 +224,6 @@ class Game():
             else:
                 self.sio.emit('message', {"type": "player_join_failure", "message": "Game is full"}, to=sid)
                 self.sio.disconnect(sid)
-
-    def _override_game_state(self, game_state: GameState):
-        self.board._set_state(game_state['board'])
-        self.pot._set_state(game_state['pot'])
 
     def start(self):
         pass

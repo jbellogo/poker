@@ -21,15 +21,16 @@ PREFLOP_STATE = {
         'cards': []}
 }
 
-def test_override_game_state(game_fix):
-    game_fix._override_game_state(PREFLOP_STATE)
-    state = game_fix.get_state()
-    assert(state == PREFLOP_STATE)
+# def test_override_game_state(game_fix):
+#     game_fix._override_game_state(PREFLOP_STATE)
+#     state = game_fix.get_state()
+#     assert(state == PREFLOP_STATE)
 
 
 ## test the transition from preflop to flop
 @pytest.mark.asyncio
-async def test_transition_into_flop(monkeypatch, game_fix):
+async def test1(monkeypatch, game_fix):
+    '''test the transition from preflop to flop'''
     preflop_actions = [
         {'sid' : '3', 'amount_bet' : 40, 'action' : "call"},
         {'sid' : '1', 'amount_bet' : 20, 'action' : "call"},
@@ -53,6 +54,20 @@ async def test_transition_into_flop(monkeypatch, game_fix):
     # call_total now builds up across betting rounds.
     assert(state['pot'] == {'call_total': 40, 'check_allowed': True, 'minimum_raise': 80, 'pot_size': 120})
 
+
+@pytest.mark.asyncio
+async def test2(monkeypatch, game_fix_flop):
+    flop_actions = [
+        {'sid' : '3', 'amount_bet' : 0, 'action' : "check"},
+        {'sid' : '1', 'amount_bet' : 0, 'action' : "check"},
+        {'sid' : '2', 'amount_bet' : 0, 'action' : "check"},
+    ]
+    flop_hand_history = await get_hand_history(game_fix_flop, monkeypatch, flop_actions, "FLOP")
+    state = game_fix_flop.get_state()
+    assert(len(flop_hand_history) == 3)
+    assert(state['board']['stage'] == 'FLOP')
+    assert(len(state['board']['cards']) == 3)
+    assert(state['pot'] == {'call_total': 40, 'check_allowed': True, 'minimum_raise': 80, 'pot_size': 120})
 
 
 
