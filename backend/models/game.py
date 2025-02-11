@@ -8,6 +8,7 @@ from models.definitions import *
 import pprint
 from models.config import * # Global variables, better practice to use json.
 from models.pot import Pot
+from models.hands import get_best_hand
 import asyncio
 import copy
 
@@ -233,11 +234,14 @@ class Game():
     def start(self):
         pass
 
-    def determine_winner(self):
-        # use the list of players and the board cards to determine the winner.
-        for player in self.players:
-            get_best_hand(player.get_cards() + self.board.get_cards())
-        
+    # def determine_winner(self):
+    #     hands = {}
+    #     for player in self.players:
+    #         hands[player.get_sid()] = get_best_hand(player.get_cards() + self.board.get_cards())
 
+    #     winners = get_winner(hands)
+    #     print(f"WINNERS: {winners}")
+    #     # for sid in winners:
+    #     #     self.players[sid].collect_pot(self.pot.get_pot_size())
         
        

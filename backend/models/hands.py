@@ -142,3 +142,23 @@ def get_best_hand(cards : list[Card]) -> tuple[HandRankings, list[Card]]:
             return straight_flush
         else:
             return best_hand_kinds, cards_in_hand_kinds
+        
+
+def get_winner(hands : dict[str, tuple[HandRankings, set[Card]]]) -> list[str]:
+    '''
+    Returns a list of sids of players with the best hand.
+    hands = { sid : (hand_ranking, set[cards]) }
+    cards contains copies of 5 board cards plus 2 player cards
+    Handles ties by returning all players with the highest ranking hand
+    '''
+    # First find the maximum ranking
+    min_ranking : HandRankings = min(hands.values(), key=lambda x: x[0])[0]
+    
+    print(f"MIN RANKING: {min_ranking}")
+    # Return all players that have this ranking
+    winners : list[str] = [sid for sid, (hand_ranking, cards) in hands.items() if hand_ranking == min_ranking]
+    
+    # break ties, if possible, by comparing cards and suits
+
+    return winners
+

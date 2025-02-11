@@ -156,4 +156,32 @@ def test_get_best_hand():
     assert hand_cards == set(['KING_HEARTS'])
 
 
+def test_get_winner():
+    '''
+    Test that the winner is returned correctly
+    Don't care about ties for now
+    Can only handle compating different hand rankings for now
+    '''
+    # test single winner
+    hands = {
+        'sid1': (HandRankings.ROYAL_FLUSH, set(['ACE_DIAMONDS', 'KING_DIAMONDS', 'QUEEN_DIAMONDS', 'JACK_DIAMONDS', 'TEN_DIAMONDS'])),
+        'sid2': (HandRankings.STRAIGHT_FLUSH, set(['TWO_HEARTS', 'THREE_HEARTS', 'FOUR_HEARTS', 'FIVE_HEARTS', 'SIX_HEARTS']))
+    }
+    assert get_winner(hands) == ['sid1']
+
+    hands = {
+        'sid1': (HandRankings.HIGH_CARD, set(['ACE_DIAMONDS', 'KING_DIAMONDS', 'QUEEN_SPADES', 'THREE_DIAMONDS', 'TEN_DIAMONDS'])),
+        'sid2': (HandRankings.TWO_PAIR, set(['TWO_HEARTS', 'TWO_DIAMONDS', 'FOUR_HEARTS', 'THREE_CLUBS'])),
+        'sid3': (HandRankings.FLUSH, set(['TWO_HEARTS', 'THREE_HEARTS', 'TEN_HEARTS', 'FIVE_HEARTS', 'SIX_HEARTS']))
+
+    }
+    assert get_winner(hands) == ['sid3']
+
+    hands = {
+        'sid1': (HandRankings.HIGH_CARD, set(['ACE_DIAMONDS', 'KING_DIAMONDS', 'QUEEN_SPADES', 'THREE_DIAMONDS', 'TEN_DIAMONDS'])),
+        'sid2': (HandRankings.TWO_PAIR, set(['TWO_HEARTS', 'TWO_DIAMONDS', 'FOUR_HEARTS', 'THREE_CLUBS'])),
+    }
+    assert get_winner(hands) == ['sid2']
+
+
     
