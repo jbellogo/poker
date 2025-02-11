@@ -14,8 +14,8 @@ def get_most_of_a_kind(sorted_cards : list[Card]) -> tuple[HandRankings, set[Car
     Returns the highest ranking hand made up of repeating cards:
     - High Card <  Pair < Two Pair <  Three of a Kind < Full House < Four of a Kind
     '''    
-    print(f"SORTED CARDS:")
-    pprint.pprint(sorted_cards)
+    # print(f"SORTED CARDS:")
+    # pprint.pprint(sorted_cards)
     rank_counts = { card.rank.name : set() for card in sorted_cards }
     maximally_occurring_rank = sorted_cards[0].rank.name
 
@@ -25,8 +25,8 @@ def get_most_of_a_kind(sorted_cards : list[Card]) -> tuple[HandRankings, set[Car
         if len(rank_counts[card.rank.name]) > len(rank_counts[maximally_occurring_rank]):
             maximally_occurring_rank = card.rank.name
 
-    print(f"MAXIMALLY OCCURRING RANK: {maximally_occurring_rank}")
-    pprint.pprint(rank_counts)
+    # print(f"MAXIMALLY OCCURRING RANK: {maximally_occurring_rank}")
+    # pprint.pprint(rank_counts)
 
     # the order of the following checks is important to return the highest ranking hand
     hand_rank = HandRankings.HIGH_CARD
@@ -64,10 +64,12 @@ def get_straight(sorted_cards : list[Card]) -> Union[bool, tuple[HandRankings, l
     max_consecutive = []
     for card in sorted_cards_acelow:
         if len(max_consecutive) == 5:
-            return (HandRankings.STRAIGHT, max_consecutive)
+            return (HandRankings.STRAIGHT, set([ card.__str__() for card in max_consecutive ]))
         elif max_consecutive != []:
             if card.rank == max_consecutive[-1].rank - 1:
                 max_consecutive.append(card)
+            elif card.rank == max_consecutive[-1].rank:
+                continue ## skip duplicates... this might conflict with straight flush if we skip the card that makes the flush
             else:
                 max_consecutive = [card]
         else:
@@ -75,21 +77,32 @@ def get_straight(sorted_cards : list[Card]) -> Union[bool, tuple[HandRankings, l
     return False
 
 def get_flush(sorted_cards : list[Card]) -> Union[bool, tuple[HandRankings, list[Card]]]:
-    suit_counts = {"S": [], "H": [], "C": [], "D": []}
+    suit_counts = {"S": set(), "H": set(), "C": set(), "D": set()}
     for card in sorted_cards:
-        suit_counts[card.suit].append(card)
+        suit_counts[card.suit].add(card.__str__())
         if len(suit_counts[card.suit]) == 5:
             return (HandRankings.FLUSH, suit_counts[card.suit])
     return False
 
 def get_straight_flush(sorted_cards : list[Card]) -> Union[bool, tuple[HandRankings, list[Card]]]:
+    '''
+    straight < flush < straight flush < royal flush
+    '''
+    # print(f"SORTED CARDS:")
+    # pprint.pprint(sorted_cards)
     isFlush = get_flush(sorted_cards)
     isStraight = get_straight(sorted_cards)
+    # print(f"IS FLUSH: {isFlush}")
+    # print(f"IS STRAIGHT: {isStraight}")
     if (isFlush!=False and isStraight!=False):
-        # check for straight flush
-        if isFlush[1] == isStraight[1]:
+        # check for straight flush, matching ranks only
+        set_flush_ranks = set([card.split('_')[0] for card in isFlush[1]])
+        set_straight_ranks = set([card.split('_')[0] for card in isStraight[1]])
+        # print(f"SET FLUSH RANKS: {set_flush_ranks}")
+        # print(f"SET STRAIGHT RANKS: {set_straight_ranks}")
+        if set_flush_ranks == set_straight_ranks:
             # check for royal flush
-            if isFlush[1][0].rank == Rank.ACE:
+            if set_straight_ranks == set(['TEN', 'JACK', 'QUEEN', 'KING', 'ACE']):
                 return (HandRankings.ROYAL_FLUSH, isFlush[1])
             else:
                 return (HandRankings.STRAIGHT_FLUSH, isFlush[1])
