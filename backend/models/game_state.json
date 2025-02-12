@@ -1,0 +1,533 @@
+{
+  "FLOP": [{
+    "game_state": {
+      "board": {
+        "cards": [
+          "FOUR_CLUBS",
+          "SIX_SPADES",
+          "ACE_SPADES",
+          "TEN_SPADES", 
+          "KING_HEARTS"
+        ],
+        "stage": "FLOP"
+      },
+      "pot": {
+        "call_total": 40,
+        "check_allowed": true,
+        "minimum_raise": 80,
+        "pot_size": 120
+      }
+    },
+    "player_state": {
+      "private_info": {
+        "cards": [
+          "TWO_HEARTS",
+          "KING_SPADES"
+        ]
+      },
+      "public_info": {
+        "bet_total": 40,
+        "betting_status": "active",
+        "current_bet": 0,
+        "funds": 960,
+        "last_action": "check",
+        "name": "player3",
+        "pid": 3,
+        "role": "other",
+        "sid": "sid3"
+      }
+    },
+    "response": {
+      "action": "check",
+      "amount_bet": 0,
+      "sid": "3"
+    },
+    "sid": "3"
+  }, {
+    "game_state": {
+      "board": {
+        "cards": [
+          "FOUR_CLUBS",
+          "SIX_SPADES",
+          "ACE_SPADES",
+          "TEN_SPADES", 
+          "KING_HEARTS"
+        ],
+        "stage": "FLOP"
+      },
+      "pot": {
+        "call_total": 40,
+        "check_allowed": true,
+        "minimum_raise": 80,
+        "pot_size": 120
+      }
+    },
+    "player_state": {
+      "private_info": {
+        "cards": [
+          "TWO_SPADES",
+          "EIGHT_HEARTS"
+        ]
+      },
+      "public_info": {
+        "bet_total": 40,
+        "betting_status": "active",
+        "current_bet": 0,
+        "funds": 960,
+        "last_action": "check",
+        "name": "player1",
+        "pid": 1,
+        "role": "sb",
+        "sid": "sid1"
+      }
+    },
+    "response": {
+      "action": "check",
+      "amount_bet": 0,
+      "sid": "1"
+    },
+    "sid": "1"
+  }, {
+    "game_state": {
+      "board": {
+        "cards": [
+          "FOUR_CLUBS",
+          "SIX_SPADES",
+          "ACE_SPADES",
+          "TEN_SPADES", 
+          "KING_HEARTS"
+        ],
+        "stage": "FLOP"
+      },
+      "pot": {
+        "call_total": 40,
+        "check_allowed": true,
+        "minimum_raise": 80,
+        "pot_size": 120
+      }
+    },
+    "player_state": {
+      "private_info": {
+        "cards": [
+          "ACE_LOW_HEARTS",
+          "ACE_LOW_DIAMONDS"
+        ]
+      },
+      "public_info": {
+        "bet_total": 40,
+        "betting_status": "active",
+        "current_bet": 0,
+        "funds": 960,
+        "last_action": "check",
+        "name": "player2",
+        "pid": 2,
+        "role": "bb",
+        "sid": "sid2"
+      }
+    },
+    "response": {
+      "action": "check",
+      "amount_bet": 0,
+      "sid": "2"
+    },
+    "sid": "2"
+  }],
+  "PREFLOP": [{
+    "game_state": {
+      "board": {
+        "cards": [
+          "FOUR_CLUBS",
+          "SIX_SPADES",
+          "ACE_SPADES",
+          "TEN_SPADES", 
+          "KING_HEARTS"
+        ],
+        "stage": "PREFLOP"
+      },
+      "pot": {
+        "call_total": 40,
+        "check_allowed": false,
+        "minimum_raise": 80,
+        "pot_size": 60
+      }
+    },
+    "player_state": {
+      "private_info": {
+        "cards": [
+          "TWO_HEARTS",
+          "KING_SPADES"
+        ]
+      },
+      "public_info": {
+        "bet_total": 40,
+        "betting_status": "active",
+        "current_bet": 40,
+        "funds": 960,
+        "last_action": "call",
+        "name": "player3",
+        "pid": 3,
+        "role": "other",
+        "sid": "sid3"
+      }
+    },
+    "response": {
+      "action": "call",
+      "amount_bet": 40,
+      "sid": "3"
+    },
+    "sid": "3"
+  }, {
+    "game_state": {
+      "board": {
+        "cards": [
+          "FOUR_CLUBS",
+          "SIX_SPADES",
+          "ACE_SPADES",
+          "TEN_SPADES", 
+          "KING_HEARTS"
+        ],
+        "stage": "PREFLOP"
+      },
+      "pot": {
+        "call_total": 40,
+        "check_allowed": false,
+        "minimum_raise": 80,
+        "pot_size": 100
+      }
+    },
+    "player_state": {
+      "private_info": {
+        "cards": [
+          "TWO_SPADES",
+          "EIGHT_HEARTS"
+        ]
+      },
+      "public_info": {
+        "bet_total": 40,
+        "betting_status": "active",
+        "current_bet": 20,
+        "funds": 960,
+        "last_action": "call",
+        "name": "player1",
+        "pid": 1,
+        "role": "sb",
+        "sid": "sid1"
+      }
+    },
+    "response": {
+      "action": "call",
+      "amount_bet": 20,
+      "sid": "1"
+    },
+    "sid": "1"
+  }, {
+    "game_state": {
+      "board": {
+        "cards": [
+          "FOUR_CLUBS",
+          "SIX_SPADES",
+          "ACE_SPADES",
+          "TEN_SPADES", 
+          "KING_HEARTS"
+        ],
+        "stage": "PREFLOP"
+      },
+      "pot": {
+        "call_total": 40,
+        "check_allowed": true,
+        "minimum_raise": 80,
+        "pot_size": 120
+      }
+    },
+    "player_state": {
+      "private_info": {
+        "cards": [
+          "ACE_LOW_HEARTS",
+          "ACE_LOW_DIAMONDS"
+        ]
+      },
+      "public_info": {
+        "bet_total": 40,
+        "betting_status": "active",
+        "current_bet": 0,
+        "funds": 960,
+        "last_action": "check",
+        "name": "player2",
+        "pid": 2,
+        "role": "bb",
+        "sid": "sid2"
+      }
+    },
+    "response": {
+      "action": "check",
+      "amount_bet": 0,
+      "sid": "2"
+    },
+    "sid": "2"
+  }],
+  "RIVER": [{
+    "game_state": {
+      "board": {
+        "cards": [
+          "FOUR_CLUBS",
+          "SIX_SPADES",
+          "ACE_SPADES",
+          "TEN_SPADES", 
+          "KING_HEARTS"
+        ],
+        "stage": "RIVER"
+      },
+      "pot": {
+        "call_total": 40,
+        "check_allowed": true,
+        "minimum_raise": 80,
+        "pot_size": 120
+      }
+    },
+    "player_state": {
+      "private_info": {
+        "cards": [
+          "TWO_HEARTS",
+          "KING_SPADES"
+        ]
+      },
+      "public_info": {
+        "bet_total": 40,
+        "betting_status": "active",
+        "current_bet": 0,
+        "funds": 960,
+        "last_action": "check",
+        "name": "player3",
+        "pid": 3,
+        "role": "other",
+        "sid": "sid3"
+      }
+    },
+    "response": {
+      "action": "check",
+      "amount_bet": 0,
+      "sid": "3"
+    },
+    "sid": "3"
+  }, {
+    "game_state": {
+      "board": {
+        "cards": [
+          "FOUR_CLUBS",
+          "SIX_SPADES",
+          "ACE_SPADES",
+          "TEN_SPADES", 
+          "KING_HEARTS"
+        ],
+        "stage": "RIVER"
+      },
+      "pot": {
+        "call_total": 40,
+        "check_allowed": true,
+        "minimum_raise": 80,
+        "pot_size": 120
+      }
+    },
+    "player_state": {
+      "private_info": {
+        "cards": [
+          "TWO_SPADES",
+          "EIGHT_HEARTS"
+        ]
+      },
+      "public_info": {
+        "bet_total": 40,
+        "betting_status": "active",
+        "current_bet": 0,
+        "funds": 960,
+        "last_action": "check",
+        "name": "player1",
+        "pid": 1,
+        "role": "sb",
+        "sid": "sid1"
+      }
+    },
+    "response": {
+      "action": "check",
+      "amount_bet": 0,
+      "sid": "1"
+    },
+    "sid": "1"
+  }, {
+    "game_state": {
+      "board": {
+        "cards": [
+          "FOUR_CLUBS",
+          "SIX_SPADES",
+          "ACE_SPADES",
+          "TEN_SPADES", 
+          "KING_HEARTS"
+        ],
+        "stage": "RIVER"
+      },
+      "pot": {
+        "call_total": 40,
+        "check_allowed": true,
+        "minimum_raise": 80,
+        "pot_size": 120
+      }
+    },
+    "player_state": {
+      "private_info": {
+        "cards": [
+          "ACE_LOW_HEARTS",
+          "ACE_LOW_DIAMONDS"
+        ]
+      },
+      "public_info": {
+        "bet_total": 40,
+        "betting_status": "active",
+        "current_bet": 0,
+        "funds": 960,
+        "last_action": "check",
+        "name": "player2",
+        "pid": 2,
+        "role": "bb",
+        "sid": "sid2"
+      }
+    },
+    "response": {
+      "action": "check",
+      "amount_bet": 0,
+      "sid": "2"
+    },
+    "sid": "2"
+  }],
+  "TURN": [{
+    "game_state": {
+      "board": {
+        "cards": [
+          "FOUR_CLUBS",
+          "SIX_SPADES",
+          "ACE_SPADES",
+          "TEN_SPADES", 
+          "KING_HEARTS"
+        ],
+        "stage": "TURN"
+      },
+      "pot": {
+        "call_total": 40,
+        "check_allowed": true,
+        "minimum_raise": 80,
+        "pot_size": 120
+      }
+    },
+    "player_state": {
+      "private_info": {
+        "cards": [
+          "TWO_HEARTS",
+          "KING_SPADES"
+        ]
+      },
+      "public_info": {
+        "bet_total": 40,
+        "betting_status": "active",
+        "current_bet": 0,
+        "funds": 960,
+        "last_action": "check",
+        "name": "player3",
+        "pid": 3,
+        "role": "other",
+        "sid": "sid3"
+      }
+    },
+    "response": {
+      "action": "check",
+      "amount_bet": 0,
+      "sid": "3"
+    },
+    "sid": "3"
+  }, {
+    "game_state": {
+      "board": {
+        "cards": [
+          "FOUR_CLUBS",
+          "SIX_SPADES",
+          "ACE_SPADES",
+          "TEN_SPADES", 
+          "KING_HEARTS"
+        ],
+        "stage": "TURN"
+      },
+      "pot": {
+        "call_total": 40,
+        "check_allowed": true,
+        "minimum_raise": 80,
+        "pot_size": 120
+      }
+    },
+    "player_state": {
+      "private_info": {
+        "cards": [
+          "TWO_SPADES",
+          "EIGHT_HEARTS"
+        ]
+      },
+      "public_info": {
+        "bet_total": 40,
+        "betting_status": "active",
+        "current_bet": 0,
+        "funds": 960,
+        "last_action": "check",
+        "name": "player1",
+        "pid": 1,
+        "role": "sb",
+        "sid": "sid1"
+      }
+    },
+    "response": {
+      "action": "check",
+      "amount_bet": 0,
+      "sid": "1"
+    },
+    "sid": "1"
+  }, {
+    "game_state": {
+      "board": {
+        "cards": [
+          "FOUR_CLUBS",
+          "SIX_SPADES",
+          "ACE_SPADES",
+          "TEN_SPADES", 
+          "KING_HEARTS"
+        ],
+        "stage": "TURN"
+      },
+      "pot": {
+        "call_total": 40,
+        "check_allowed": true,
+        "minimum_raise": 80,
+        "pot_size": 120
+      }
+    },
+    "player_state": {
+      "private_info": {
+        "cards": [
+          "ACE_LOW_HEARTS",
+          "ACE_LOW_DIAMONDS"
+        ]
+      },
+      "public_info": {
+        "bet_total": 40,
+        "betting_status": "active",
+        "current_bet": 0,
+        "funds": 960,
+        "last_action": "check",
+        "name": "player2",
+        "pid": 2,
+        "role": "bb",
+        "sid": "sid2"
+      }
+    },
+    "response": {
+      "action": "check",
+      "amount_bet": 0,
+      "sid": "2"
+    },
+    "sid": "2"
+  }]}

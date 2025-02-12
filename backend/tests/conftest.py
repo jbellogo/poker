@@ -50,11 +50,19 @@ def player_list_fix():
 
 @pytest.fixture
 def game_fix(player_list_fix):
-    game = Game(sb_amount=_TESTING_SB_AMOUNT,
+    game = Game(seed=123, sb_amount=_TESTING_SB_AMOUNT,
                 initial_player_funds=_TESTING_INITIAL_PLAYER_FUNDS)
     for player in player_list_fix:
         game.add_player(player.sid, player.name)
     game.initialize_hand() # after adding players @TODO add some guards/lobby, game is not initialized until players > 2
+    return game
+
+@pytest.fixture
+def game_fix_not_initialized(player_list_fix):
+    game = Game(seed=123, sb_amount=_TESTING_SB_AMOUNT,
+                initial_player_funds=_TESTING_INITIAL_PLAYER_FUNDS)
+    for player in player_list_fix:
+        game.add_player(player.sid, player.name)
     return game
 
 @pytest.fixture
@@ -112,6 +120,7 @@ async def get_hand_history(game_fix, monkeypatch, actions, board_stage : BoardSt
     assert(board_stage in ["PREFLOP", "FLOP", "TURN", "RIVER"])
     test_mock = AsyncMock(side_effect=actions)
     monkeypatch.setattr(Player, "request_betting_response", test_mock)
+    game_fix.initialize_betting_round(board_stage)
     await game_fix.betting_round(board_stage)
     hand_history = game_fix.get_hand_history()[board_stage]
     return hand_history

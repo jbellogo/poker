@@ -1,4 +1,6 @@
 # Game
+# Global variables, better practice to use json.
+
 NUM_PLAYERS : int = 3
 INITIAL_PLAYER_FUNDS : int  = 5000
 SB_AMOUNT : int = 20

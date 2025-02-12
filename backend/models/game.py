@@ -6,16 +6,16 @@ from typing import List, Dict, Optional
 from uuid import UUID
 from models.definitions import *
 import pprint
-from models.config import * # Global variables, better practice to use json.
+from models.config import *
 from models.pot import Pot
-from models.hands import get_best_hand
+from models.hands import get_best_hand, get_winner
 import asyncio
 import copy
 
 
 
 class Game():
-    def __init__(self, sio = None, max_players : int = MAX_PLAYERS, sb_amount : int = SB_AMOUNT, initial_player_funds : int = INITIAL_PLAYER_FUNDS):
+    def __init__(self, sio = None, seed : Optional[int] = None, max_players : int = MAX_PLAYERS, sb_amount : int = SB_AMOUNT, initial_player_funds : int = INITIAL_PLAYER_FUNDS):
         self.sio = sio # socketio server
         self.max_players = max_players
         self.sb_amount = sb_amount
@@ -24,11 +24,9 @@ class Game():
         # variables
         self.players : List[Player] = []
         self.pot : Pot = Pot(sb_amount=sb_amount)
-        self.deck : Deck =  Deck()
+        self.deck : Deck =  Deck(seed=seed)
         self.board : Board = Board()
-        self.rounds : List[BoardStage] = ["PREFLOP", "FLOP", "TURN", "RIVER"]
         self.hand_history : Dict[str, List[BettingRoundRecord]] = {"PREFLOP": [], "FLOP":[], "TURN":[], "RIVER":[]} 
-        # self.initialize_hand() # Cannot be done on an empty player list.
 
     
     def add_player(self, sid: str, player_name: str):
@@ -40,6 +38,7 @@ class Game():
 
     def clear_board(self):
         self.deck : Deck = Deck()
+        self.deck.initialize()
         self.board : Board = Board()
 
 
@@ -118,7 +117,7 @@ class Game():
         '''
         pot : PotState = self.pot.get_state()
         board : BoardState = self.board.get_state()
-        return GameState(pot= pot, board=board)
+        return copy.deepcopy(GameState(pot= pot, board=board))
 
 
 
@@ -127,7 +126,6 @@ class Game():
         Returns the number of players to call.
         Since this is used after a raise, isnt it just active players - 1?
         '''
-        # count : int = 0
         players = []
         for player in self.players:
             if player.get_betting_status() == "active":
@@ -137,16 +135,6 @@ class Game():
         return players
     
 
-    # def update_lim(self, turn : int, lim : int, last_action : PlayerAction) -> int:
-    #     additional_turns = 0
-    #     if last_action == "raise" or last_action == "all-in":
-    #         additional_turns = self.get_players_to_call()
-    #         return turn + additional_turns + 1
-    #     # elif last_action == "fold":
-    #     #     return lim + 1
-    #     return lim # the original number of turns
-
-
 
     async def betting_round(self, board_stage : BoardStage) -> None:  
         '''
@@ -154,15 +142,13 @@ class Game():
         Awaits active player actions
         Updates player status from action response, ie all-in, folded, etc.
         '''
-        self.initialize_betting_round(board_stage)
         # print(f"\n---------STARTING BETTING ROUND {board_stage}")
         players_to_call = [player for player in self.players if player.get_betting_status() == "active"]
         # set turn order
 
         # print(f"players_to_call: {[player.get_id() for player in players_to_call]}")
-        while True:
-            if len(players_to_call) == 0:
-                break
+        while len(players_to_call) > 0:
+
 
             # print(f"pot state: {self.pot.get_state()}")
             for i, player in enumerate(players_to_call):
@@ -187,30 +173,48 @@ class Game():
 
     async def play_hand(self):
         # Initialize clean Deck and Board
-        self.clear_board()
-        for player in self.players:
-            self.deck.deal_cards(player)
+        self.initialize_hand()
 
-        for round in self.rounds:
-            self.board.set_round(round)
-            self.deck.deal_cards(self.board)
-
-            # 1) Show Board
+        for round in ["PREFLOP", "FLOP", "TURN", "RIVER"]:
+            self.initialize_betting_round(round)
+            # 1) Emit Board State
             self.board.show()  ## Once we have a frontend, this game logic will go there. 
+
             # 2) Betting Round 
-
             await self.betting_round(round) 
-            # Awaits player responses and uploads pot and player status. 
-            # This should update the pot and this should be made visible in real time. 
-        self.update_player_turns() # responsible for this
-        self.determine_winner()
 
-    
+        self.update_player_turns()
+        winners = self.determine_winner()
+        print(f"winners: {winners}")
+        # self.pay_winners(winners)
+
+
 
     def get_player_state(self, sid):
         for player in self.players:
             if player.get_sid() == sid:
                 return player.get_state()
+
+
+    def determine_winner(self) -> list[str]:
+        hands = {}
+        active_players = [player for player in self.players if player.get_betting_status() == "active"]
+        print(f"board cards: {self.board.get_cards()}")
+        for player in active_players:
+            print(f"player {player.get_id()} cards: {player.get_cards()}")
+            hands[player.get_sid()] = get_best_hand(player.get_cards() + self.board.get_cards())
+        winners = get_winner(hands)
+        # self.pot.reset()
+        return winners
+
+
+    def start(self):
+        # # maybe handle lobby here
+        # while True:
+        #     if len(self.players) >= 2:
+        #         self.initialize_hand()
+        #         self.play_hand()
+        pass
 
 
     def handle_player_action(self, sid, data):
@@ -230,18 +234,3 @@ class Game():
             else:
                 self.sio.emit('message', {"type": "player_join_failure", "message": "Game is full"}, to=sid)
                 self.sio.disconnect(sid)
-
-    def start(self):
-        pass
-
-    # def determine_winner(self):
-    #     hands = {}
-    #     for player in self.players:
-    #         hands[player.get_sid()] = get_best_hand(player.get_cards() + self.board.get_cards())
-
-    #     winners = get_winner(hands)
-    #     print(f"WINNERS: {winners}")
-    #     # for sid in winners:
-    #     #     self.players[sid].collect_pot(self.pot.get_pot_size())
-        
-       

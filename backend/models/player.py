@@ -50,9 +50,9 @@ class Player(Entity):
     def get_betting_status(self) -> PlayerStatus:
         return self.betting_status
     
-    # def reset_bet_total(self):
-    #     self.bet_total = 0
-
+    def get_cards(self) -> List[Card]:
+        return self.cards
+    
     def collect_blind(self, sb_amount : int):
         if self.role == "sb":
             self.funds -= sb_amount

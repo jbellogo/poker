@@ -129,22 +129,22 @@ def get_best_hand(cards : list[Card]) -> tuple[HandRankings, list[Card]]:
     best_hand_kinds, cards_in_hand_kinds = get_most_of_a_kind(sorted_cards)
     straight_flush = get_straight_flush(sorted_cards)
 
-    print(f"BEST KINDS HANDS: {best_hand_kinds}")
-    print(f" -- cards: {cards_in_hand_kinds}")
+    # print(f"BEST KINDS HANDS: {best_hand_kinds.name}")
+    # print(f" -- cards: {cards_in_hand_kinds}")
 
     if straight_flush==False:
         return best_hand_kinds, cards_in_hand_kinds
 
     else:
-        print(f"STRAIGHT FLUSH: {straight_flush[0]}")
-        print(f" -- cards: {straight_flush[1]}")
+        # print(f"STRAIGHT FLUSH: {straight_flush[0]}")
+        # print(f" -- cards: {straight_flush[1]}")
         if straight_flush[0] < best_hand_kinds:
             return straight_flush
         else:
             return best_hand_kinds, cards_in_hand_kinds
         
 
-def get_winner(hands : dict[str, tuple[HandRankings, set[Card]]]) -> list[str]:
+def get_winner(hands : dict[str, tuple[HandRankings, set[Card]]]) -> dict[str, set[Card]]:
     '''
     Returns a list of sids of players with the best hand.
     hands = { sid : (hand_ranking, set[cards]) }
@@ -154,11 +154,9 @@ def get_winner(hands : dict[str, tuple[HandRankings, set[Card]]]) -> list[str]:
     # First find the maximum ranking
     min_ranking : HandRankings = min(hands.values(), key=lambda x: x[0])[0]
     
-    print(f"MIN RANKING: {min_ranking}")
     # Return all players that have this ranking
-    winners : list[str] = [sid for sid, (hand_ranking, cards) in hands.items() if hand_ranking == min_ranking]
+    winners : list[str] = {sid: (hand_ranking.name, cards) for sid, (hand_ranking, cards) in hands.items() if hand_ranking == min_ranking}
     
     # break ties, if possible, by comparing cards and suits
-
     return winners
 

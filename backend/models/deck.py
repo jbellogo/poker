@@ -1,24 +1,26 @@
 from models.definitions import *
 from models.entity import Entity
 import random
-
+from typing import Optional
+from models.board import Board
 
 class Deck(Entity):
-    def __init__(self):
-        super().__init__()
-        self.initialize()
-        self.shuffle()
+
+    seed : Optional[int] = None
+
+
+    def shuffle(self):
+        if self.seed is not None:
+            random.seed(self.seed)
+        random.shuffle(self.cards)
+        random.shuffle(self.cards)
 
     def initialize(self):
         for suit in Suit.list():
             for rank in Rank.list():
                 card = Card(suit=suit, rank=rank)
                 self.add_card(card)
-
-    def shuffle(self):
-        random.shuffle(self.cards)
-        random.shuffle(self.cards)
-
+        self.shuffle()
     
     def deal_cards(self, entity : Entity) -> List[Card]:
         '''
